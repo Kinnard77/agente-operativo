@@ -24,11 +24,18 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
+    <body
+      className={`${geistSans.variable} ${geistMono.variable} antialiased bg-black min-h-screen relative overflow-x-hidden`}
+    >
+      {/* Violet Halos (Background Decorators) copied from AI Projects Hub */}
+      <div className="fixed top-[-10%] left-[-10%] w-[40%] h-[40%] bg-violet-900/20 blur-[120px] rounded-full pointer-events-none z-0"></div>
+      <div className="fixed bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-fuchsia-900/20 blur-[120px] rounded-full pointer-events-none z-0"></div>
+      <div className="fixed top-[20%] right-[10%] w-[30%] h-[30%] bg-indigo-900/10 blur-[100px] rounded-full pointer-events-none z-0"></div>
+
+      <div className="relative z-10">
         {children}
-      </body>
+      </div>
+    </body>
     </html>
   );
 }

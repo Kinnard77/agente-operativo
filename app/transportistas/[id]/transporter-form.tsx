@@ -1,0 +1,150 @@
+'use client'
+
+import { Transportista, EstadoTransportista } from '@/lib/types_verification'
+import { updateTransportista } from '../actions'
+import { useState } from 'react'
+
+export default function TransporterForm({ initialData, history }: { initialData: Transportista, history: any[] }) {
+    const [data, setData] = useState(initialData)
+    const [loading, setLoading] = useState(false)
+
+    const handleChange = (field: keyof Transportista, value: any) => {
+        setData(prev => ({ ...prev, [field]: value }))
+    }
+
+    const handleSave = async () => {
+        setLoading(true)
+        await updateTransportista(data.id, data)
+        setLoading(false)
+        alert('Guardado correctamente')
+    }
+
+    const handleCertify = async () => {
+        if (!confirm('¿Confirmas que este transportista cumple con TODOS los requisitos?')) return;
+        setLoading(true)
+        await updateTransportista(data.id, { estado: 'CERTIFICADO' })
+        setLoading(false)
+        setData(prev => ({ ...prev, estado: 'CERTIFICADO' }))
+    }
+
+    const hasApprovedVisits = history.some(h => h.resultado === 'APROBADO')
+    const canCertify = data.estado === 'VERIFICANDO' && hasApprovedVisits
+
+    return (
+        <div className="space-y-6">
+            {/* Estado Banner */}
+            <div className="flex justify-between items-center bg-slate-800 p-4 rounded-xl border border-slate-700">
+                <div>
+                    <label className="text-xs text-slate-500 uppercase">Estado Actual</label>
+                    <div className="font-bold text-xl text-white">{data.estado}</div>
+                </div>
+                {canCertify && (
+                    <button
+                        onClick={handleCertify}
+                        disabled={loading}
+                        className="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-lg font-bold shadow-lg shadow-emerald-500/20"
+                    >
+                        ✓ CERTIFICAR
+                    </button>
+                )}
+            </div>
+
+            {/* Formulario */}
+            <div className="space-y-4">
+                <Input label="Nombre de la Empresa" value={data.nombre} onChange={v => handleChange('nombre', v)} />
+                <div className="grid grid-cols-2 gap-4">
+                    <Input label="Contacto" value={data.contacto || ''} onChange={v => handleChange('contacto', v)} />
+                    <Input label="Teléfono" value={data.telefono || ''} onChange={v => handleChange('telefono', v)} />
+                </div>
+                <Input label="Email" type="email" value={data.email || ''} onChange={v => handleChange('email', v)} />
+
+                <div className="grid grid-cols-2 gap-4">
+                    <Input label="Tipo Unidades" value={data.tipo_unidades || ''} placeholder="Ej. Sprinter" onChange={v => handleChange('tipo_unidades', v)} />
+                    <Input label="Capacidad Max (PAX)" type="number" value={data.capacidad_maxima} onChange={v => handleChange('capacidad_maxima', parseInt(v))} />
+                </div>
+
+                <div className="flex items-center gap-3 bg-slate-900 p-3 rounded-lg border border-slate-800">
+                    <input
+                        type="checkbox"
+                        id="seguro"
+                        className="w-5 h-5 accent-indigo-500"
+                        checked={data.tiene_seguro_viajero}
+                        onChange={e => handleChange('tiene_seguro_viajero', e.target.checked)}
+                    />
+                    <label htmlFor="seguro" className="text-sm font-medium">Tiene Seguro de Viajero Vigente</label>
+                </div>
+
+                <div>
+                    <label className="text-xs text-slate-500 mb-1 block">Estado</label>
+                    <select
+                        className="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-white"
+                        value={data.estado}
+                        onChange={e => handleChange('estado', e.target.value)}
+                    >
+                        <option value="CANDIDATO">CANDIDATO</option>
+                        <option value="VERIFICANDO">VERIFICANDO</option>
+                        <option value="CERTIFICADO">CERTIFICADO</option>
+                        <option value="RECHAZADO">RECHAZADO</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label className="text-xs text-slate-500 mb-1 block">Notas</label>
+                    <textarea
+                        className="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-white h-24"
+                        value={data.notas || ''}
+                        onChange={e => handleChange('notas', e.target.value)}
+                    />
+                </div>
+            </div>
+
+            <button
+                onClick={handleSave}
+                disabled={loading}
+                className="w-full bg-indigo-600 hover:bg-indigo-500 text-white py-4 rounded-xl font-bold text-lg sticky bottom-4 shadow-xl"
+            >
+                {loading ? 'Guardando...' : 'Guardar Cambios'}
+            </button>
+
+            {/* Historial */}
+            <div className="pt-8 border-t border-slate-800">
+                <h3 className="text-lg font-bold text-slate-400 mb-4">Historial de Verificaciones</h3>
+                {history.length === 0 ? (
+                    <p className="text-slate-600 italic">No verificado en ningún viaje aún.</p>
+                ) : (
+                    <div className="space-y-3">
+                        {history.map((h: any) => (
+                            <div key={h.id} className="bg-slate-900 p-3 rounded-lg border border-slate-800 flex justify-between items-center">
+                                <div>
+                                    <div className="text-sm font-bold text-slate-300">{h.viaje?.region || 'Viaje sin región'}</div>
+                                    <div className="text-xs text-slate-500">{h.viaje?.fecha_viaje}</div>
+                                </div>
+                                <span className={`text-xs font-bold px-2 py-1 rounded border 
+                                    ${h.resultado === 'APROBADO' ? 'text-emerald-400 border-emerald-900 bg-emerald-900/20' :
+                                        h.resultado === 'RECHAZADO' ? 'text-rose-400 border-rose-900 bg-rose-900/20' :
+                                            'text-amber-400 border-amber-900 bg-amber-900/20'}`}>
+                                    {h.resultado}
+                                </span>
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </div>
+        </div>
+    )
+}
+
+function Input({ label, type = 'text', value, onChange, placeholder }: any) {
+    return (
+        <div>
+            <label className="text-xs text-slate-500 mb-1 block">{label}</label>
+            <input
+                type={type}
+                className="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-white focus:ring-2 focus:ring-indigo-500 outline-none"
+                value={value}
+                onChange={e => onChange(e.target.value)}
+                placeholder={placeholder}
+            />
+        </div>
+    )
+}
