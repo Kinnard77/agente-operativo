@@ -111,6 +111,15 @@ export async function GET(req: Request) {
         date_local: row.fecha_salida ?? "",
         service_name: `Salida ${row.id_salida ?? ""} → ${row.destino_final ?? ""}`.trim(),
       },
+      mission: {
+        origen: row.ciudad_origen ?? "",
+        destino: row.destino_final ?? "",
+        pax_requerida: row.itinerario?.logistica?.capacidad_requerida ?? "",
+        ventana_comida_inicio: row.itinerario?.ventana_comida?.inicio ?? "",
+        ventana_comida_fin: row.itinerario?.ventana_comida?.fin ?? "",
+        hora_inicio: Array.isArray(row.itinerario?.ruta_critica) ? (row.itinerario.ruta_critica?.[0]?.h_salida ?? row.itinerario.ruta_critica?.[0]?.h_llegada ?? "") : "",
+        hora_fin: Array.isArray(row.itinerario?.ruta_critica) ? (row.itinerario.ruta_critica?.[row.itinerario.ruta_critica.length - 1]?.h_llegada ?? row.itinerario.ruta_critica?.[row.itinerario.ruta_critica.length - 1]?.h_salida ?? "") : "",
+      },
       audit: {
         estado: row.itinerario?.auditoria?.estado,
         bloqueadores: row.itinerario?.auditoria?.bloqueadores,

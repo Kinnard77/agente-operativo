@@ -49,6 +49,16 @@ type CarrierPacketInput = {
     bloqueadores?: { critico?: boolean; categoria?: string; mensaje?: string }[];
   };
 
+  mission?: {
+    origen?: string;
+    destino?: string;
+    pax_requerida?: number | string;
+    ventana_comida_inicio?: string;
+    ventana_comida_fin?: string;
+    hora_inicio?: string;
+    hora_fin?: string;
+  };
+
   stops: Stop[];
 };
 
@@ -109,6 +119,45 @@ export function renderCarrierPacketHtml(
       </div>`
     : "";
 
+  const carrierHtml = (input.carrier?.name || input.carrier?.phone || input.carrier?.email || input.carrier?.vehicle)
+    ? `<div class="card">
+        <div class="k">Datos del transportista</div>
+        <div class="grid" style="margin-top:8px;">
+          <div>
+            <div class="k">Transportista</div><div class="v"><strong>${esc(input.carrier?.name || "")}</strong></div>
+            <div class="k">Unidad</div><div class="v">${esc(input.carrier?.vehicle || "")}</div>
+          </div>
+          <div>
+            <div class="k">Teléfono</div><div class="v">${esc(input.carrier?.phone || "")}</div>
+            <div class="k">Email</div><div class="v">${esc(input.carrier?.email || "")}</div>
+          </div>
+        </div>
+      </div>`
+    : "";
+
+  const mission = input.mission || {};
+  const missionHtml = `<div class="card">
+    <div class="k">Resumen de misión</div>
+
+    <div class="grid" style="margin-top:8px;">
+      <div>
+        <div class="k">Origen → Destino</div>
+        <div class="v"><strong>${esc(mission.origen || "")}</strong> → <strong>${esc(mission.destino || "")}</strong></div>
+
+        <div class="k" style="margin-top:8px;">PAX requerida</div>
+        <div class="v">${esc(mission.pax_requerida ?? "")}</div>
+      </div>
+
+      <div>
+        <div class="k">Horario</div>
+        <div class="v">${esc(mission.hora_inicio || "")}${mission.hora_inicio && mission.hora_fin ? " → " : ""}${esc(mission.hora_fin || "")}</div>
+
+        <div class="k" style="margin-top:8px;">Ventana comida</div>
+        <div class="v">${esc(mission.ventana_comida_inicio || "")}${mission.ventana_comida_inicio && mission.ventana_comida_fin ? " → " : ""}${esc(mission.ventana_comida_fin || "")}</div>
+      </div>
+    </div>
+  </div>`;
+
   return `<!doctype html>
 <html lang="es">
 <head>
@@ -117,25 +166,27 @@ export function renderCarrierPacketHtml(
   <title>Paquete Transportista</title>
 </head>
 <body>
-  <div class="card" style="display:flex; gap:14px; align-items:center;">
-    <div style="width:120px; flex:0 0 auto;">
-      <img src="/brand/odisea-challenge.png" alt="Odisea Challenge" style="width:120px; height:auto; display:block;" />
+  <div class="card" style="text-align:center;">
+    <div style="display:flex; justify-content:center; margin-bottom:10px;">
+      <img
+        src="/brand/odisea-challenge.png"
+        alt="Odisea Challenge"
+        style="width:160px; height:auto; display:block;"
+      />
     </div>
 
-    <div style="flex:1 1 auto;">
-      <div style="font-size:18px; font-weight:700;">
-        ${esc(input.service?.doc || "Paquete Transportista")}
-      </div>
+    <div style="font-size:20px; font-weight:800;">
+      ${esc(input.service?.doc || "Paquete Transportista")}
+    </div>
 
-      <div class="muted" style="margin-top:4px;">
-        <strong>${esc(input.service?.brand || "Odisea Challenge")}</strong>
-        ${input.service?.folio ? ` • Folio: <span class="mono">${esc(input.service.folio)}</span>` : ""}
-      </div>
+    <div class="muted" style="margin-top:6px;">
+      <strong>${esc(input.service?.brand || "Odisea Challenge")}</strong>
+      ${input.service?.folio ? ` • Folio: <span class="mono">${esc(input.service.folio)}</span>` : ""}
+    </div>
 
-      <div class="muted" style="margin-top:2px;">
-        ${esc(input.route?.city || "")}
-        ${input.route?.date_local ? ` • ${esc(input.route.date_local)}` : ""}
-      </div>
+    <div class="muted" style="margin-top:2px;">
+      ${esc(input.route?.city || "")}
+      ${input.route?.date_local ? ` • ${esc(input.route.date_local)}` : ""}
     </div>
   </div>
   <div class="card">
@@ -150,6 +201,9 @@ export function renderCarrierPacketHtml(
       </div>
     </div>
   </div>
+
+  ${carrierHtml}
+  ${missionHtml}
 
   ${auditHtml}
 
