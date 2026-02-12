@@ -76,6 +76,32 @@ export async function GET(req: Request) {
       );
     }
 
+    // --- Validacion minimos operativos ---
+    const missing: string[] = [];
+    if (!row.transportista_id) missing.push("transportista_id");
+    const rutaCritica = Array.isArray(row.itinerario?.ruta_critica) ? row.itinerario.ruta_critica : [];
+    if (rutaCritica.length < 2) missing.push("itinerario.ruta_critica (min 2 paradas)");
+    const capReq = row.itinerario?.logistica?.capacidad_requerida;
+    if (!capReq || Number(capReq) <= 0) missing.push("itinerario.logistica.capacidad_requerida");
+
+    // Validar ventanas de comida si aplica
+    const stopsForCheck = extractStops(row.itinerario);
+    const hasFoodCheck = stopsForCheck.some((s: any) => s.es_comida);
+    if (hasFoodCheck) {
+      if (!row.itinerario?.ventana_comida?.inicio) missing.push("itinerario.ventana_comida.inicio");
+      if (!row.itinerario?.ventana_comida?.fin) missing.push("itinerario.ventana_comida.fin");
+    }
+
+    if (missing.length > 0) {
+      console.warn(`[CarrierPacket-HTML] Validation Failed for ${itineraryId}:`, missing);
+      return NextResponse.json({
+        ok: false,
+        error: "Datos incompletos para Paquete Transportista",
+        missing,
+        hint: "Asigna transportista_id en itinerario_salidas y define logistica.capacidad_requerida en itinerario jsonb."
+      }, { status: 409 });
+    }
+
     // Cargar transportista (si está asignado)
     let carrier: {
       name?: string;
@@ -89,17 +115,27 @@ export async function GET(req: Request) {
       const { data: tData, error: tErr } = await supabase
         .from("transportistas")
         .select(
-          "id,nombre,contacto,telefono,email,tipo_unidades,capacidad_máxima,estado,fecha_certificacion,notas"
+          "id,nombre,contacto,telefono,email,tipo_unidades,capacidad_maxima,estado,fecha_certificacion,notas"
         )
         .eq("id", row.transportista_id)
         .single();
+
+      if (tErr || !tData) {
+        console.warn(`[CarrierPacket-HTML] Transportista not found: ${row.transportista_id}`);
+        return NextResponse.json({
+          ok: false,
+          error: "Datos incompletos para Paquete Transportista",
+          missing: ["transportista (db record not found)"],
+          hint: "El ID del transportista existe en itinerario pero no en la tabla transportistas."
+        }, { status: 409 });
+      }
 
       if (!tErr && tData) {
         carrier = {
           name: tData.nombre ?? "",
           phone: tData.telefono ?? "",
           email: tData.email ?? "",
-          vehicle: `${tData.tipo_unidades ?? ""}${tData.capacidad_máxima ? ` (${tData.capacidad_máxima} pax)` : ""
+          vehicle: `${tData.tipo_unidades ?? ""}${tData.capacidad_maxima ? ` (${tData.capacidad_maxima} pax)` : ""
             }`.trim(),
         };
       }
@@ -107,25 +143,59 @@ export async function GET(req: Request) {
 
     const rawStops = extractStops(row.itinerario);
 
+    // Ordenar por hora (ascendente), dejando sin hora al final
+    const getTimeKey = (s: any) => (s?.h_llegada || s?.h_salida || "").trim();
+
+    rawStops.sort((a: any, b: any) => {
+      const ta = getTimeKey(a);
+      const tb = getTimeKey(b);
+
+      const aHas = !!ta;
+      const bHas = !!tb;
+
+      if (aHas && bHas) return ta.localeCompare(tb);
+      if (aHas && !bHas) return -1; // a primero
+      if (!aHas && bHas) return 1;  // b primero
+      return 0;
+    });
+
     // Normalizamos paradas (tu formato real)
     const stops = rawStops.map((s: any, idx: number) => {
       const isFirst = idx === 0;
       const isLast = idx === rawStops.length - 1;
 
-      const type =
-        s.es_comida
-          ? "BREAK"
-          : isFirst
-            ? "PICKUP"
-            : isLast
-              ? "DROPOFF"
-              : "OTHER";
+      const tipoReal =
+        s.tipo ??
+        (s.es_comida ? "COMIDA" : undefined) ??
+        (isFirst ? "SALIDA" : undefined) ??
+        (isLast ? "LLEGADA" : "CHECKPOINT");
 
-      const time_local =
-        s.h_llegada || s.h_salida
-          ? `${s.h_llegada ?? ""}${s.h_llegada && s.h_salida ? " → " : ""
-            }${s.h_salida ?? ""}`.trim()
-          : "";
+      const type =
+        tipoReal === "COMIDA" ? "BREAK"
+          : (tipoReal === "SALIDA" ? "PICKUP"
+            : (tipoReal === "LLEGADA" ? "DROPOFF"
+              : "OTHER"));
+
+      const salida = String(s.h_salida ?? "").trim();
+      const llegada = String(s.h_llegada ?? "").trim();
+
+      let time_local = "";
+
+      // Semántica estricta por tipo
+      if (tipoReal === "COMIDA") {
+        // inicio → fin
+        time_local = (llegada && salida) ? `${llegada} → ${salida}` : (llegada || salida);
+      } else if (tipoReal === "SALIDA" || tipoReal === "REGRESO") {
+        time_local = salida || llegada; // preferimos salida
+      } else if (tipoReal === "LLEGADA") {
+        time_local = llegada || salida; // preferimos llegada
+      } else {
+        // ENTRADA / CHECKPOINT / TECNICA / EMERGENCIA
+        time_local = llegada || salida; // preferimos llegada
+      }
+
+      const flags: string[] = [];
+      if (!time_local) flags.push("SIN HORA");
 
       return {
         order: idx + 1,
@@ -172,7 +242,8 @@ export async function GET(req: Request) {
         estado: row.itinerario?.auditoria?.estado,
         bloqueadores: row.itinerario?.auditoria?.bloqueadores,
       },
-      stops,
+      changes: (row.itinerario?.cambios_ultimo_momento ?? []) as any[],
+      stops: stops as any[],
     });
 
     return new NextResponse(html, {

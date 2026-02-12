@@ -59,6 +59,19 @@ type CarrierPacketInput = {
     hora_fin?: string;
   };
 
+  changes?: { ts?: string; quien?: string; cambio?: string }[];
+
+  operator_controls?: {
+    lugar: string;
+    objetivo: string;
+    tolerancia_min: any;
+    checkin_ts: string;
+    status: string;
+    qr?: string;
+  }[];
+
+
+
   stops: Stop[];
 };
 
@@ -119,6 +132,39 @@ export function renderCarrierPacketHtml(
       </div>`
     : "";
 
+  const operatorControls = input.operator_controls ?? [];
+  const operatorControlsHtml = operatorControls.length
+    ? `<div class="card">
+      <div class="k">Control Operador</div>
+      <table style="margin-top:8px;">
+        <thead>
+          <tr>
+            <th>Lugar</th>
+            <th>Objetivo</th>
+            <th>Tol (min)</th>
+            <th>Check-in</th>
+            <th>Status</th>
+            <th>QR</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${operatorControls.map(c => `
+            <tr>
+              <td>${esc(c.lugar)}</td>
+              <td class="mono">${esc(c.objetivo)}</td>
+              <td class="mono">${esc(c.tolerancia_min)}</td>
+              <td class="mono">${esc(c.checkin_ts ? c.checkin_ts.substring(11, 16) : "")}</td>
+              <td><strong>${esc(c.status)}</strong></td>
+              <td style="text-align:center;">
+                 ${c.qr ? `<img src="${c.qr}" style="width:64px;height:64px;display:block;margin:0 auto;">` : ""}
+              </td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+    </div>`
+    : "";
+
   const carrierHtml = (input.carrier?.name || input.carrier?.phone || input.carrier?.email || input.carrier?.vehicle)
     ? `<div class="card">
         <div class="k">Datos del transportista</div>
@@ -157,6 +203,35 @@ export function renderCarrierPacketHtml(
       </div>
     </div>
   </div>`;
+
+  // Cambios de último momento: siempre mostrar el bloque (aunque no haya cambios)
+  // para que Operaciones tenga un espacio visible y el PDF sea verificable.
+  const changes = input.changes ?? [];
+  const changesHtml = `<div class="card">
+      <div class="k">Cambios de último momento</div>
+      ${changes.length
+      ? `<table style="margin-top:8px;">
+            <thead>
+              <tr>
+                <th>Hora</th>
+                <th>Quién</th>
+                <th>Cambio</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${changes
+        .map(
+          (c) => `<tr>
+                    <td class="mono">${esc(c.ts || "")}</td>
+                    <td>${esc(c.quien || "")}</td>
+                    <td>${esc(c.cambio || "")}</td>
+                  </tr>`
+        )
+        .join("")}
+            </tbody>
+          </table>`
+      : `<div class="muted" style="margin-top:8px;">Sin cambios registrados.</div>`}
+    </div>`;
 
   return `<!doctype html>
 <html lang="es">
@@ -202,6 +277,8 @@ export function renderCarrierPacketHtml(
     </div>
   </div>
 
+  ${changesHtml}
+  ${operatorControlsHtml}
   ${carrierHtml}
   ${missionHtml}
 
