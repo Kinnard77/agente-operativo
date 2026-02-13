@@ -51,16 +51,16 @@ export default function TransporterForm({ initialData, history }: { initialData:
 
             {/* Formulario */}
             <div className="space-y-4">
-                <Input label="Nombre de la Empresa" value={data.nombre} onChange={v => handleChange('nombre', v)} />
+                <Input label="Nombre de la Empresa" value={data.nombre} onChange={(v: string) => handleChange('nombre', v)} />
                 <div className="grid grid-cols-2 gap-4">
-                    <Input label="Contacto" value={data.contacto || ''} onChange={v => handleChange('contacto', v)} />
-                    <Input label="Teléfono" value={data.telefono || ''} onChange={v => handleChange('telefono', v)} />
+                    <Input label="Contacto" value={data.contacto || ''} onChange={(v: string) => handleChange('contacto', v)} />
+                    <Input label="Teléfono" value={data.telefono || ''} onChange={(v: string) => handleChange('telefono', v)} />
                 </div>
-                <Input label="Email" type="email" value={data.email || ''} onChange={v => handleChange('email', v)} />
+                <Input label="Email" type="email" value={data.email || ''} onChange={(v: string) => handleChange('email', v)} />
 
                 <div className="grid grid-cols-2 gap-4">
-                    <Input label="Tipo Unidades" value={data.tipo_unidades || ''} placeholder="Ej. Sprinter" onChange={v => handleChange('tipo_unidades', v)} />
-                    <Input label="Capacidad Max (PAX)" type="number" value={data.capacidad_maxima} onChange={v => handleChange('capacidad_maxima', parseInt(v))} />
+                    <Input label="Tipo Unidades" value={data.tipo_unidades || ''} placeholder="Ej. Sprinter" onChange={(v: string) => handleChange('tipo_unidades', v)} />
+                    <Input label="Capacidad Max (PAX)" type="number" value={data.capacidad_maxima} onChange={(v: string) => handleChange('capacidad_maxima', parseInt(v))} />
                 </div>
 
                 <div className="flex items-center gap-3 bg-slate-900 p-3 rounded-lg border border-slate-800">

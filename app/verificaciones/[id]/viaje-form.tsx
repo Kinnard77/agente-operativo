@@ -47,17 +47,17 @@ export default function ViajeForm({ initialData, initialPivots }: { initialData:
                 <h2 className="text-indigo-400 font-bold mb-4 uppercase text-xs tracking-widest">Resumen del Viaje</h2>
 
                 <div className="grid grid-cols-2 gap-4 mb-4">
-                    <Input label="Región / Ruta" value={data.region} onChange={v => handleChange('region', v)} />
-                    <Input label="Fecha" type="date" value={data.fecha_viaje} onChange={v => handleChange('fecha_viaje', v)} />
+                    <Input label="Región / Ruta" value={data.region} onChange={(v: string) => handleChange('region', v)} />
+                    <Input label="Fecha" type="date" value={data.fecha_viaje} onChange={(v: string) => handleChange('fecha_viaje', v)} />
                 </div>
 
                 <div className="bg-black/30 p-4 rounded-lg border border-slate-800/50">
                     <h3 className="text-slate-400 text-xs mb-3">GASTOS OPERATIVOS</h3>
                     <div className="grid grid-cols-2 gap-3">
-                        <Input label="Gasolina" type="number" value={data.gasto_gasolina} onChange={v => handleChange('gasto_gasolina', parseFloat(v))} />
-                        <Input label="Comida" type="number" value={data.gasto_comida} onChange={v => handleChange('gasto_comida', parseFloat(v))} />
-                        <Input label="Hospedaje" type="number" value={data.gasto_hospedaje} onChange={v => handleChange('gasto_hospedaje', parseFloat(v))} />
-                        <Input label="Otros" type="number" value={data.gasto_otros} onChange={v => handleChange('gasto_otros', parseFloat(v))} />
+                        <Input label="Gasolina" type="number" value={data.gasto_gasolina} onChange={(v: string) => handleChange('gasto_gasolina', parseFloat(v))} />
+                        <Input label="Comida" type="number" value={data.gasto_comida} onChange={(v: string) => handleChange('gasto_comida', parseFloat(v))} />
+                        <Input label="Hospedaje" type="number" value={data.gasto_hospedaje} onChange={(v: string) => handleChange('gasto_hospedaje', parseFloat(v))} />
+                        <Input label="Otros" type="number" value={data.gasto_otros} onChange={(v: string) => handleChange('gasto_otros', parseFloat(v))} />
                     </div>
                     <div className="mt-4 pt-4 border-t border-slate-700 flex justify-between items-center">
                         <span className="text-sm font-bold text-slate-300">TOTAL VIÁTICOS</span>
@@ -66,7 +66,7 @@ export default function ViajeForm({ initialData, initialPivots }: { initialData:
                 </div>
 
                 <div className="mt-4">
-                    <Input label="Notas Generales" type="textarea" value={data.notas_generales || ''} onChange={v => handleChange('notas_generales', v)} />
+                    <Input label="Notas Generales" type="textarea" value={data.notas_generales || ''} onChange={(v: string) => handleChange('notas_generales', v)} />
                 </div>
 
                 <button

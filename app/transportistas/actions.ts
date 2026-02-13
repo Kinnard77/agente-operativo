@@ -71,7 +71,7 @@ export async function updateTransportista(id: string, patch: Partial<Transportis
     // Si se está certificando, agregar fecha
     if (patch.estado === 'CERTIFICADO') {
         const { data: current } = await supabase.from('transportistas').select('estado').eq('id', id).single()
-        if (current.estado !== 'CERTIFICADO') {
+        if (current?.estado !== 'CERTIFICADO') {
             // @ts-ignore
             patch.fecha_certificacion = new Date().toISOString()
         }

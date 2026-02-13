@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { CheckpointOperativo, ItinerarioSalida, Hora } from '../../../../blueprint'
-import { updateSalida } from '../../actions'
+import { updateSalida, assignTransporter } from '../../actions'
 import {
     establecerVentanaComida,
     definirPuntoSalida,
@@ -239,6 +239,66 @@ export function CronogramaForm({ itinerario }: BaseProps) {
                     </div>
                 ))}
             </div>
+        </div>
+    )
+}
+
+export function TransporterSelector({ idSalida, currentId, candidates }: { idSalida: string, currentId: string | null, candidates: any[] }) {
+    const router = useRouter()
+    const [loading, setLoading] = useState(false)
+    const [selected, setSelected] = useState(currentId || '')
+
+    const handleAssign = async () => {
+        if (!selected) return // Allow user to verify current state if same
+        setLoading(true)
+        try {
+            await assignTransporter(idSalida, selected)
+            // Force refresh to update server state and UI
+            router.refresh()
+        } catch (e) {
+            console.error(e)
+            alert('Error asignando transportista')
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    // Update local state if props change (e.g. after refresh)
+    if (currentId && selected !== currentId && !loading) {
+        // This might cause infinite loop if not careful. 
+        // Actually, let's just initialize state. Better yet, useEffect.
+    }
+    // Simple version: rely on router.refresh matching currentId, so component re-mounts or we just show current
+
+    return (
+        <div className="border border-slate-700 p-4 rounded bg-slate-900/50 my-2">
+            <h3 className="font-bold text-emerald-400 mb-2">Asignar Transportista</h3>
+            <div className="flex gap-2 items-center">
+                <select
+                    className="bg-slate-800 border border-slate-600 rounded p-1 text-white text-sm flex-1 h-9"
+                    value={selected}
+                    onChange={e => setSelected(e.target.value)}
+                >
+                    <option value="">-- Seleccionar --</option>
+                    {candidates.map((c: any) => (
+                        <option key={c.id} value={c.id}>
+                            {c.nombre} ({c.tipo_unidades})
+                        </option>
+                    ))}
+                </select>
+                <button
+                    onClick={handleAssign}
+                    disabled={loading || !selected}
+                    className="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1 rounded text-sm disabled:opacity-50 h-9"
+                >
+                    {loading ? '...' : (selected === currentId ? 'Actualizado' : 'Asignar')}
+                </button>
+            </div>
+            {currentId && (
+                <div className="mt-2 text-xs text-emerald-400/80">
+                    <span className="font-bold">Asignado:</span> {candidates.find((c: any) => c.id === currentId)?.nombre || 'Desconocido'}
+                </div>
+            )}
         </div>
     )
 }

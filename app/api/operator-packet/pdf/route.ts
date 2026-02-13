@@ -267,7 +267,7 @@ export async function GET(req: Request) {
         });
 
         // HTML -> PDF
-        const browser = await puppeteer.launch({ headless: "new" });
+        const browser = await puppeteer.launch({ headless: true });
         try {
             const page = await browser.newPage();
             await page.setContent(html, { waitUntil: "networkidle0" });
@@ -278,7 +278,7 @@ export async function GET(req: Request) {
                 margin: { top: "12mm", right: "12mm", bottom: "12mm", left: "12mm" },
             });
 
-            return new NextResponse(pdfBuffer, {
+            return new NextResponse(Buffer.from(pdfBuffer), {
                 status: 200,
                 headers: {
                     "Content-Type": "application/pdf",

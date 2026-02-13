@@ -1,5 +1,7 @@
 'use server'
 
+import { revalidatePath } from 'next/cache'
+
 import { createClient } from '@/utils/supabase/server'
 import { generarBorradorItinerario, IngestaDatosBase } from '../../ingesta'
 import { validarItinerario } from '../../validator'
