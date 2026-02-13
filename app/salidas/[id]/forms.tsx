@@ -2,14 +2,14 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { CheckpointOperativo, ItinerarioSalida, Hora } from '../../../../blueprint'
+import { CheckpointOperativo, ItinerarioSalida, Hora } from '@/blueprint'
 import { updateSalida, assignTransporter } from '../../actions'
 import {
     establecerVentanaComida,
     definirPuntoSalida,
     actualizarCapacidad,
     actualizarCronograma
-} from '../../../../operador'
+} from '@/operador'
 
 // Helper para convertir input vacio a "POR DEFINIR"
 const toHora = (val: string): Hora => val.trim() === '' ? 'POR DEFINIR' : val as Hora

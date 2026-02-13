@@ -3,10 +3,10 @@
 import { revalidatePath } from 'next/cache'
 
 import { createClient } from '@/utils/supabase/server'
-import { generarBorradorItinerario, IngestaDatosBase } from '../../ingesta'
-import { validarItinerario } from '../../validator'
-import { CheckpointOperativo, ItinerarioSalida } from '../../blueprint'
-import { generarPaqueteTransportistaHTML } from '../../paquete_transportista'
+import { generarBorradorItinerario, IngestaDatosBase } from '@/ingesta'
+import { validarItinerario } from '@/validator'
+import { CheckpointOperativo, ItinerarioSalida } from '@/blueprint'
+import { generarPaqueteTransportistaHTML } from '@/paquete_transportista'
 
 // --- 1. CREAR SALIDA ---
 export async function createSalida(payload: IngestaDatosBase) {

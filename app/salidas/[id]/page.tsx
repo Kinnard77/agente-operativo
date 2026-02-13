@@ -1,8 +1,8 @@
 import { createClient } from '@/utils/supabase/server'
-import { validarItinerario } from '../../../../validator'
+import { validarItinerario } from '@/validator'
 import Link from 'next/link'
 import { VentanaComidaForm, PuntoSalidaForm, CapacidadForm, CronogramaForm, TransporterSelector } from './forms'
-import { ItinerarioSalida } from '../../../../blueprint'
+import { ItinerarioSalida } from '@/blueprint'
 import { redirect } from 'next/navigation'
 import { getCertifiedTransportistas } from '../../transportistas/actions'
 
