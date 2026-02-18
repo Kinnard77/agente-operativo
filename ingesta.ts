@@ -4,6 +4,8 @@ export interface IngestaDatosBase {
     ciudad_origen: string;
     fecha_salida: string;
     capacidad_estimada?: number;
+    precio_total?: number;
+    hora_salida?: string;
 }
 
 /**
@@ -15,10 +17,11 @@ export function generarBorradorItinerario(datos: IngestaDatosBase): ItinerarioSa
     const timestamp = new Date().toISOString();
     const id_salida = `SAL-${datos.ciudad_origen.substring(0, 3).toUpperCase()}-${datos.fecha_salida.replace(/-/g, '')}-${Date.now().toString(36).slice(-4).toUpperCase()}`;
 
+    // Priority 2: Requiere un punto exacto
     const ruta_critica: CheckpointOperativo[] = [
         {
             id: "stop-1",
-            localizacion: "POR DEFINIR", // Priority 2: Requiere un punto exacto
+            localizacion: "POR DEFINIR",
             h_llegada: "POR DEFINIR",
             h_salida: "POR DEFINIR"
         },
@@ -56,6 +59,9 @@ export function generarBorradorItinerario(datos: IngestaDatosBase): ItinerarioSa
         fecha_salida: datos.fecha_salida,
         timestamp_creacion: timestamp,
         modo: 'PLANEACIÓN',
+        precio_total: datos.precio_total || 1200,
+        // @ts-ignore - Simple casting for MVP
+        hora_salida: datos.hora_salida || "07:00",
         auditoria: {
             estado: 'INCOMPLETO',
             bloqueadores: [],

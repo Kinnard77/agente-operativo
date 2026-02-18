@@ -41,6 +41,9 @@ export interface ItinerarioSalida {
     modo: ModoOperativo; // Controla el rigor del validador
     auditoria: ResultadoValidacion;
 
+    precio_total?: number;
+    hora_salida?: Hora; // "HH:MM" o "POR DEFINIR"
+
     ruta_critica: CheckpointOperativo[];
     logistica: {
         capacidad_requerida: number;
