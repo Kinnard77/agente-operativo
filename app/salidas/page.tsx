@@ -1,6 +1,6 @@
 import { createClient } from '@/utils/supabase/server'
 import Link from 'next/link'
-import { createSalida } from '../actions'
+import { createSalida, deleteSalida } from '../actions'
 import { redirect } from 'next/navigation'
 // import dynamic from 'next/dynamic'
 import { ItinerarioSalida } from '../../blueprint'
@@ -50,15 +50,9 @@ export default async function Page() {
             <h1 className="text-2xl font-bold mb-6">Agente Operativo</h1>
 
             <div className="mb-8">
-                <h2 className="font-bold text-lg mb-2">Mapa de Salidas (Vie-Dom)</h2>
-                {weekendTrips.length > 0 ? (
-                    // @ts-ignore
-                    <MapComponent trips={weekendTrips} />
-                ) : (
-                    <div className="bg-slate-100 p-4 rounded text-center text-slate-500">
-                        No hay salidas programadas para este fin de semana.
-                    </div>
-                )}
+                <h2 className="font-bold text-lg mb-2">Mapa de Salidas</h2>
+                {/* @ts-ignore */}
+                <MapComponent trips={salidas?.map(s => ({ ...s, coords: getCoords(s.ciudad_origen) })) || []} />
             </div>
 
             {/* Botón Nueva Salida Rápida (Demo) */}
@@ -74,8 +68,8 @@ export default async function Page() {
             <div className="space-y-4">
                 <h3 className="font-bold text-gray-500 text-sm uppercase">Listado Completo</h3>
                 {salidas?.map((s) => (
-                    <Link key={s.id} href={`/salidas/${s.id_salida}`} className="block">
-                        <div className="border p-4 rounded-lg hover:bg-slate-50 transition-colors">
+                    <div key={s.id} className="border p-4 rounded-lg hover:bg-slate-50 transition-colors relative group">
+                        <Link href={`/salidas/${s.id_salida}`} className="block">
                             <div className="flex justify-between items-start mb-2">
                                 <span className="font-mono text-xs font-bold bg-slate-100 px-2 py-1 rounded">{s.id_salida}</span>
                                 <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded border ${s.estado === 'LISTO_PARA_OPERAR' ? 'bg-emerald-100 text-emerald-700 border-emerald-200' :
@@ -86,8 +80,16 @@ export default async function Page() {
                             </div>
                             <p className="font-bold">{s.ciudad_origen} → {s.destino_final}</p>
                             <p className="text-xs text-slate-500 mt-1">Modo: {s.modo} • {s.fecha_salida}</p>
-                        </div>
-                    </Link>
+                        </Link>
+
+                        {/* Delete Button */}
+                        <form action={deleteSalida} className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <input type="hidden" name="id_salida" value={s.id_salida} />
+                            <button className="text-red-500 hover:text-red-700 p-2 bg-white rounded-full shadow-sm hover:bg-red-50" title="Eliminar">
+                                🗑️
+                            </button>
+                        </form>
+                    </div>
                 ))}
             </div>
         </div>

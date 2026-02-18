@@ -73,8 +73,26 @@ export async function updateSalida(id_salida: string, patch: Partial<ItinerarioS
         })
         .eq('id_salida', id_salida)
 
+
     if (saveError) throw new Error(saveError.message)
     return { success: true, estado: itinerario.auditoria.estado }
+}
+
+export async function deleteSalida(formData: FormData) {
+    const id_salida = formData.get('id_salida') as string
+    if (!id_salida) return
+
+    const supabase = await createClient()
+
+    // Auth check implied by page protection, but good to have constraint
+    const { error } = await supabase
+        .from('itinerario_salidas')
+        .delete()
+        .eq('id_salida', id_salida)
+
+    if (error) throw new Error(error.message)
+
+    revalidatePath('/salidas')
 }
 
 // --- 3. CERTIFICAR ---
