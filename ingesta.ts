@@ -57,7 +57,7 @@ export function generarBorradorItinerario(datos: IngestaDatosBase): ItinerarioSa
 
         // Campos de Negocio (Strict)
         precio_total: datos.precio_total || 1200,
-        hora_salida: datos.hora_salida || "07:00",
+        hora_salida: (datos.hora_salida as any) || "07:00",
         ciudad_salida: datos.ciudad_origen,
         punto_encuentro: "POR DEFINIR", // Requiere input manual del operador
         destino: "Tour Odisea Challenge",

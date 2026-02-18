@@ -42,7 +42,7 @@ export interface ItinerarioSalida {
     punto_encuentro: string;
     coordenadas_salida?: string; // "lat, lng"
     destino_final: string;
-    destino: string; // Alias de destino_finalida: string;
+    destino: string; // Alias de destino_final
     fecha_salida: string;
     timestamp_creacion: string;
 

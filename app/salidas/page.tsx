@@ -2,10 +2,10 @@ import { createClient } from '@/utils/supabase/server'
 import Link from 'next/link'
 import { createSalida } from '../actions'
 import { redirect } from 'next/navigation'
-import dynamic from 'next/dynamic'
+// import dynamic from 'next/dynamic'
 import { ItinerarioSalida } from '../../blueprint'
 
-const MapComponent = dynamic(() => import('../components/MapComponent'), { ssr: false })
+import MapComponent from '../components/MapComponent'
 
 // Helper to get coordinates
 const getCoords = (city: string) => {
@@ -64,10 +64,10 @@ export default async function Page() {
             {/* Botón Nueva Salida Rápida (Demo) */}
             <form action={async () => {
                 'use server'
-                await createSalida({ ciudad_origen: 'Querétaro', fecha_salida: '2026-05-20' })
+                await createSalida({ ciudad_origen: 'Por Asignar', fecha_salida: '2026-05-20' })
             }}>
                 <button className="w-full bg-slate-900 text-white py-3 rounded-lg font-bold mb-8">
-                    + Nueva Salida (QRO)
+                    + Nueva Salida
                 </button>
             </form>
 
