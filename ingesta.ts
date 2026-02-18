@@ -54,14 +54,20 @@ export function generarBorradorItinerario(datos: IngestaDatosBase): ItinerarioSa
 
     return {
         id_salida,
+
+        // Campos de Negocio (Strict)
+        precio_total: datos.precio_total || 1200,
+        hora_salida: datos.hora_salida || "07:00",
+        ciudad_salida: datos.ciudad_origen,
+        punto_encuentro: "POR DEFINIR", // Requiere input manual del operador
+        destino: "Tour Odisea Challenge",
+
+        // Internal fields
         ciudad_origen: datos.ciudad_origen,
         destino_final: "Tour Odisea Challenge (4 paradas)",
         fecha_salida: datos.fecha_salida,
         timestamp_creacion: timestamp,
         modo: 'PLANEACIÓN',
-        precio_total: datos.precio_total || 1200,
-        // @ts-ignore - Simple casting for MVP
-        hora_salida: datos.hora_salida || "07:00",
         auditoria: {
             estado: 'INCOMPLETO',
             bloqueadores: [],
@@ -69,7 +75,7 @@ export function generarBorradorItinerario(datos: IngestaDatosBase): ItinerarioSa
         },
         ruta_critica,
         logistica: {
-            capacidad_requerida: datos.capacidad_estimada || 0 // Default 0 para forzar Priority 3
+            capacidad_requerida: datos.capacidad_estimada || 0
         },
         ventana_comida: {
             inicio: "POR DEFINIR",

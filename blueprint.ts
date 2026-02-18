@@ -33,8 +33,16 @@ export interface CheckpointOperativo {
 
 export interface ItinerarioSalida {
     id_salida: string;
+    // Internal / DB fields
+    id?: string; // UUID
+    transportista_id?: string;
+
     ciudad_origen: string;
+    ciudad_salida: string; // Alias de ciudad_origen
+    punto_encuentro: string;
+    coordenadas_salida?: string; // "lat, lng"
     destino_final: string;
+    destino: string; // Alias de destino_finalida: string;
     fecha_salida: string;
     timestamp_creacion: string;
 
