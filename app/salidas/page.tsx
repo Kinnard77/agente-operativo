@@ -54,7 +54,7 @@ export default async function Page() {
 
     return (
         <div className="p-4 max-w-md mx-auto">
-            <h1 className="text-2xl font-bold mb-6">Agente Operativo</h1>
+            <h1 className="text-2xl font-bold mb-6">GESTIÓN OPERATIVA - 19/02/2026</h1>
 
             <div className="mb-8">
                 <h2 className="font-bold text-lg mb-2">Mapa de Salidas</h2>
