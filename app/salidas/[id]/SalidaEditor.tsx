@@ -216,16 +216,30 @@ export default function SalidaEditor({ initialItinerario, certifiedTransportista
                         <div id="map-container" className="border border-slate-800 rounded-lg overflow-hidden">
                             {(() => {
                                 const coords = parseCoords(itinerario.coordenadas_salida || '');
-                                if (coords) {
-                                    return <LiveMapComponent lat={coords.lat} lng={coords.lng} />
-                                } else {
-                                    return (
-                                        <div className="h-[200px] w-full bg-slate-800/50 flex flex-col items-center justify-center text-slate-500 text-xs">
-                                            <span>Sin coordenadas válidas</span>
-                                            <span className="text-[10px] opacity-50">Ingrese Lat, Lng para ver mapa</span>
-                                        </div>
-                                    )
-                                }
+                                const handleMapClick = (lat: number, lng: number) => {
+                                    const val = `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+                                    updateField('coordenadas_salida', val);
+                                    saveChanges({ ...itinerario, coordenadas_salida: val });
+                                };
+
+                                const defaultLat = 19.4326;
+                                const defaultLng = -99.1332;
+                                const activeCoords = coords || { lat: defaultLat, lng: defaultLng };
+
+                                return (
+                                    <div className="relative">
+                                        <LiveMapComponent
+                                            lat={activeCoords.lat}
+                                            lng={activeCoords.lng}
+                                            onLocationSelect={handleMapClick}
+                                        />
+                                        {!coords && (
+                                            <div className="absolute top-2 right-2 bg-slate-900/80 text-xs px-2 py-1 rounded text-slate-300 pointer-events-none z-[1000]">
+                                                Sin ubicación • Haz clic para definir
+                                            </div>
+                                        )}
+                                    </div>
+                                )
                             })()}
                         </div>
                     </div>

@@ -1,7 +1,6 @@
-import 'leaflet/dist/leaflet.css';
-import { MapContainer, TileLayer, Marker, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, useMap, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 // Fix for default marker icon
 const icon = L.icon({
@@ -23,7 +22,25 @@ function MapUpdater({ coords }: { coords: [number, number] }) {
     return null;
 }
 
-export default function LiveMapComponent({ lat, lng }: { lat: number, lng: number }) {
+// Component to handle clicks
+function LocationMarker({ onSelect }: { onSelect?: (lat: number, lng: number) => void }) {
+    useMapEvents({
+        click(e) {
+            if (onSelect) {
+                onSelect(e.latlng.lat, e.latlng.lng);
+            }
+        },
+    });
+    return null;
+}
+
+interface LiveMapComponentProps {
+    lat: number;
+    lng: number;
+    onLocationSelect?: (lat: number, lng: number) => void;
+}
+
+export default function LiveMapComponent({ lat, lng, onLocationSelect }: LiveMapComponentProps) {
     const position: [number, number] = [lat, lng];
 
     return (
@@ -34,6 +51,7 @@ export default function LiveMapComponent({ lat, lng }: { lat: number, lng: numbe
             />
             <Marker position={position} icon={icon} />
             <MapUpdater coords={position} />
+            <LocationMarker onSelect={onLocationSelect} />
         </MapContainer>
     )
 }
