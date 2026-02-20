@@ -5,15 +5,30 @@ import { useRouter } from 'next/navigation'
 import { ItinerarioSalida, CheckpointOperativo, Hora } from '@/blueprint'
 import { updateSalida, assignTransporter } from '../../actions'
 import Link from 'next/link'
+import dynamic from 'next/dynamic'
 import {
     establecerVentanaComida,
     actualizarCapacidad,
     actualizarCronograma
 } from '@/operador'
 
+// Import map dynamically to avoid window is not defined
+const LiveMapComponent = dynamic(() => import('../../components/LiveMapComponent'), {
+    ssr: false,
+    loading: () => <div className="h-[300px] w-full bg-slate-800 animate-pulse rounded-lg flex items-center justify-center text-slate-500">Cargando Mapa...</div>
+})
+
 // Helper types & functions
 const toHora = (val: string): Hora => val.trim() === '' ? 'POR DEFINIR' : val as Hora
 const fromHora = (h: Hora | undefined): string => (!h || h === 'POR DEFINIR') ? '' : h
+
+const parseCoords = (coordsStr: string): { lat: number, lng: number } | null => {
+    const parts = coordsStr.split(',').map(s => parseFloat(s.trim()));
+    if (parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
+        return { lat: parts[0], lng: parts[1] };
+    }
+    return null;
+}
 
 export default function SalidaEditor({ initialItinerario, certifiedTransportistas }: { initialItinerario: ItinerarioSalida, certifiedTransportistas: any[] }) {
     const router = useRouter()
@@ -196,7 +211,23 @@ export default function SalidaEditor({ initialItinerario, certifiedTransportista
                             }}
                             placeholder="19.4326, -99.1332"
                         />
-                        <p className="text-[10px] text-slate-600 mt-1">Copia y pega desde Google Maps.</p>
+                        <p className="text-[10px] text-slate-600 mt-1 mb-4">Copia y pega desde Google Maps.</p>
+
+                        <div id="map-container" className="border border-slate-800 rounded-lg overflow-hidden">
+                            {(() => {
+                                const coords = parseCoords(itinerario.coordenadas_salida || '');
+                                if (coords) {
+                                    return <LiveMapComponent lat={coords.lat} lng={coords.lng} />
+                                } else {
+                                    return (
+                                        <div className="h-[200px] w-full bg-slate-800/50 flex flex-col items-center justify-center text-slate-500 text-xs">
+                                            <span>Sin coordenadas válidas</span>
+                                            <span className="text-[10px] opacity-50">Ingrese Lat, Lng para ver mapa</span>
+                                        </div>
+                                    )
+                                }
+                            })()}
+                        </div>
                     </div>
                 </section>
 
