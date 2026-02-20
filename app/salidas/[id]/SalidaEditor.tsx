@@ -332,8 +332,34 @@ export default function SalidaEditor({ initialItinerario, certifiedTransportista
                     </div>
                 </section>
 
+                {/* --- MANUAL SAVE BUTTON --- */}
+                <div className="pt-8">
+                    <button
+                        onClick={() => saveChanges(itinerario)}
+                        disabled={status === 'saving'}
+                        className={`
+                            w-full py-4 text-center rounded-lg font-bold text-lg uppercase tracking-widest shadow-lg transition-all
+                            ${status === 'saving' ? 'bg-indigo-900/50 text-indigo-300 cursor-not-allowed' :
+                                status === 'saved' ? 'bg-emerald-600 text-white hover:bg-emerald-500' :
+                                    status === 'error' ? 'bg-rose-600 text-white hover:bg-rose-500' :
+                                        'bg-gradient-to-r from-indigo-600 to-violet-600 text-white hover:from-indigo-500 hover:to-violet-500 hover:shadow-indigo-500/25 ring-1 ring-white/10'
+                            }
+                        `}
+                    >
+                        {status === 'saving' ? 'Guardando...' :
+                            status === 'saved' ? '¡Cambios Guardados!' :
+                                status === 'error' ? 'Error al Guardar' :
+                                    'Guardar Cambios'}
+                    </button>
+                    {status === 'saved' && (
+                        <p className="text-center text-emerald-400 text-xs mt-2 animate-pulse">
+                            Datos sincronizados correctamente
+                        </p>
+                    )}
+                </div>
+
                 {/* --- FOOTER --- */}
-                <div className="text-center pt-8 pb-4 border-t border-slate-900">
+                <div className="text-center pt-8 pb-4 border-t border-slate-900/50 mt-8">
                     <p className="text-[10px] text-slate-600 font-mono">
                         ID TÉCNICO: {itinerario.id_salida} <br />
                         UUID: {itinerario.id} <br />
