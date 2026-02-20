@@ -85,7 +85,7 @@ export default async function Page() {
                                     {s.estado}
                                 </span>
                             </div>
-                            <p className="font-bold">{s.ciudad_origen} → {s.destino_final}</p>
+                            <p className="font-bold">{s.ciudad_origen} → {s.destino_final.replace(/\s*\(\d+\s*paradas\)/i, '')}</p>
                             <p className="text-xs text-slate-500 mt-1">Modo: {s.modo} • {s.fecha_salida}</p>
                         </Link>
 
