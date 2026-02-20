@@ -36,6 +36,7 @@ export default function SalidaEditor({ initialItinerario, certifiedTransportista
     // Global State
     const [itinerario, setItinerario] = useState<ItinerarioSalida>(initialItinerario)
     const [status, setStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
+    const [errorMessage, setErrorMessage] = useState<string | null>(null)
     const [lastSaved, setLastSaved] = useState<Date | null>(null)
 
     // Autosave Logic (Debounced)
@@ -55,6 +56,7 @@ export default function SalidaEditor({ initialItinerario, certifiedTransportista
 
     const saveChanges = useCallback(async (newItinerario: ItinerarioSalida) => {
         setStatus('saving')
+        setErrorMessage(null)
         try {
             await updateSalida(newItinerario.id_salida, {
                 // We send specific fields or the whole object depending on backend logic.
@@ -68,9 +70,10 @@ export default function SalidaEditor({ initialItinerario, certifiedTransportista
 
             // Output visual feedback reset
             setTimeout(() => setStatus('idle'), 2000)
-        } catch (e) {
+        } catch (e: any) {
             console.error(e)
             setStatus('error')
+            setErrorMessage(e.message || 'Error desconocido')
         }
     }, [router])
 
@@ -354,6 +357,11 @@ export default function SalidaEditor({ initialItinerario, certifiedTransportista
                     {status === 'saved' && (
                         <p className="text-center text-emerald-400 text-xs mt-2 animate-pulse">
                             Datos sincronizados correctamente
+                        </p>
+                    )}
+                    {status === 'error' && (
+                        <p className="text-center text-rose-400 text-xs mt-2 font-mono bg-rose-950/30 p-2 rounded border border-rose-900">
+                            {errorMessage}
                         </p>
                     )}
                 </div>
