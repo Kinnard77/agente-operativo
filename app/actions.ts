@@ -63,18 +63,30 @@ export async function updateSalida(id_salida: string, patch: Partial<ItinerarioS
     itinerario.auditoria = validarItinerario(itinerario)
 
     // 4. Persistir
+    // 4. Persistir
     const { error: saveError } = await supabase
         .from('itinerario_salidas')
         .update({
             itinerario: itinerario,
             estado: itinerario.auditoria.estado,
             modo: itinerario.modo,
+
+            // SYNC CRITICAL COLUMNS
+            coordenadas_salida: itinerario.coordenadas_salida,
+            ciudad_origen: itinerario.ciudad_origen,
+            destino_final: itinerario.destino_final,
+            fecha_salida: itinerario.fecha_salida,
+
             updated_at: new Date().toISOString()
         })
         .eq('id_salida', id_salida)
 
 
     if (saveError) throw new Error(saveError.message)
+
+    revalidatePath('/salidas')
+    revalidatePath(`/salidas/${id_salida}`)
+
     return { success: true, estado: itinerario.auditoria.estado }
 }
 
