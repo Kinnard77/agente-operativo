@@ -131,7 +131,7 @@ export default function SalidaEditor({ initialItinerario, certifiedTransportista
                     </div>
 
                     <div className={`text-xs px-2 py-1 rounded border font-bold ${itinerario.auditoria.estado === 'LISTO_PARA_OPERAR' ? 'border-emerald-500 text-emerald-500 bg-emerald-950/30' :
-                            'border-amber-500 text-amber-500 bg-amber-950/30'
+                        'border-amber-500 text-amber-500 bg-amber-950/30'
                         }`}>
                         {itinerario.auditoria.estado}
                     </div>
@@ -187,6 +187,13 @@ export default function SalidaEditor({ initialItinerario, certifiedTransportista
                             value={itinerario.coordenadas_salida || ''}
                             onChange={e => updateField('coordenadas_salida', e.target.value)}
                             onBlur={handleBlur}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                    e.preventDefault()
+                                    handleBlur()
+                                        (e.target as HTMLInputElement).blur()
+                                }
+                            }}
                             placeholder="19.4326, -99.1332"
                         />
                         <p className="text-[10px] text-slate-600 mt-1">Copia y pega desde Google Maps.</p>
