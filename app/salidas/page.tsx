@@ -8,7 +8,16 @@ import { ItinerarioSalida } from '../../blueprint'
 import MapComponent from '../components/MapComponent'
 
 // Helper to get coordinates
-const getCoords = (city: string) => {
+const getCoords = (city: string, dbCoords?: string | null) => {
+    // 1. Try to parse DB coordinates first
+    if (dbCoords) {
+        const parts = dbCoords.split(',').map(s => parseFloat(s.trim()));
+        if (parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
+            return { lat: parts[0], lng: parts[1] };
+        }
+    }
+
+    // 2. Fallback to hardcoded city map
     const map: Record<string, { lat: number, lng: number }> = {
         'CDMX': { lat: 19.4326, lng: -99.1332 },
         'Querétaro': { lat: 20.5888, lng: -100.3899 },
@@ -17,7 +26,7 @@ const getCoords = (city: string) => {
         'Pachuca': { lat: 20.1011, lng: -98.7591 },
         'Cuernavaca': { lat: 18.9242, lng: -99.2216 },
     }
-    // Default or fuzzy search could be added here
+
     return map[city] || { lat: 19.4326, lng: -99.1332 } // Default to CDMX
 }
 
@@ -34,15 +43,13 @@ export default async function Page() {
     // Let's filter strictly by day of week (Fri=5, Sat=6, Sun=0)
     const weekendTrips = salidas?.filter(s => {
         // Fix date parsing if needed (assuming YYYY-MM-DD)
-        // Note: new Date('2026-05-20') treats as UTC, might be off by one day in local depending on hours.
-        // Better to split/parse manually or use a lib, but for MVP:
         const parts = s.fecha_salida.split('-');
         const date = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
         const day = date.getDay();
         return day === 0 || day === 5 || day === 6;
     }).map(s => ({
         ...s,
-        coords: getCoords(s.ciudad_origen)
+        coords: getCoords(s.ciudad_origen, s.coordenadas_salida)
     })) || [];
 
     return (
@@ -52,7 +59,7 @@ export default async function Page() {
             <div className="mb-8">
                 <h2 className="font-bold text-lg mb-2">Mapa de Salidas</h2>
                 {/* @ts-ignore */}
-                <MapComponent trips={salidas?.map(s => ({ ...s, coords: getCoords(s.ciudad_origen) })) || []} />
+                <MapComponent trips={weekendTrips} />
             </div>
 
             {/* Botón Nueva Salida Rápida (Demo) */}
