@@ -38,18 +38,11 @@ export default async function Page() {
 
     const { data: salidas } = await supabase.from('itinerario_salidas').select('*').order('created_at', { ascending: false })
 
-    // Filter for upcoming Friday, Saturday, Sunday
-    // For MVP demonstration, we might just show all, or filtered by day of week regardless of "upcoming"
-    // Let's filter strictly by day of week (Fri=5, Sat=6, Sun=0)
-    const weekendTrips = salidas?.filter(s => {
-        // Fix date parsing if needed (assuming YYYY-MM-DD)
-        const parts = s.fecha_salida.split('-');
-        const date = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
-        const day = date.getDay();
-        return day === 0 || day === 5 || day === 6;
-    }).map(s => ({
+    // Prepare data for Global Map (All active trips)
+    const mapTrips = salidas?.map(s => ({
         ...s,
-        coords: getCoords(s.ciudad_origen, s.coordenadas_salida)
+        coords: getCoords(s.ciudad_origen, s.coordenadas_salida),
+        destino_final: s.destino_final.replace(/\s*\(\d+\s*paradas\)/i, '') // Clean for map popup too
     })) || [];
 
     return (
@@ -59,7 +52,7 @@ export default async function Page() {
             <div className="mb-8">
                 <h2 className="font-bold text-lg mb-2">Mapa de Salidas</h2>
                 {/* @ts-ignore */}
-                <MapComponent trips={weekendTrips} />
+                <MapComponent trips={mapTrips} />
             </div>
 
             {/* Botón Nueva Salida Rápida (Demo) */}
