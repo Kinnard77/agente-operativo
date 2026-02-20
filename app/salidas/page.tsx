@@ -38,8 +38,8 @@ export default async function Page() {
 
     const { data: salidas } = await supabase.from('itinerario_salidas').select('*').order('created_at', { ascending: false })
 
-    // Prepare data for Global Map (All active trips)
-    const mapTrips = salidas?.map(s => ({
+    // Prepare data for Global Map (Only 'LISTO_PARA_OPERAR')
+    const mapTrips = salidas?.filter(s => s.estado === 'LISTO_PARA_OPERAR').map(s => ({
         ...s,
         coords: getCoords(s.ciudad_origen, s.coordenadas_salida),
         destino_final: s.destino_final.replace(/\s*\(\d+\s*paradas\)/i, '') // Clean for map popup too
