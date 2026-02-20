@@ -189,9 +189,9 @@ export default function SalidaEditor({ initialItinerario, certifiedTransportista
                             onBlur={handleBlur}
                             onKeyDown={(e) => {
                                 if (e.key === 'Enter') {
-                                    e.preventDefault()
-                                    handleBlur()
-                                        (e.target as HTMLInputElement).blur()
+                                    e.preventDefault();
+                                    handleBlur();
+                                    (e.target as HTMLInputElement).blur();
                                 }
                             }}
                             placeholder="19.4326, -99.1332"
