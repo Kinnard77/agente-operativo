@@ -2,11 +2,14 @@
 
 import { Transportista, EstadoTransportista } from '@/lib/types_verification'
 import { updateTransportista } from '../actions'
+import { deleteViajeTransportista } from '../../verificaciones/actions'
 import { useState } from 'react'
 
 export default function TransporterForm({ initialData, history }: { initialData: Transportista, history: any[] }) {
     const [data, setData] = useState(initialData)
     const [loading, setLoading] = useState(false)
+    const [historial, setHistorial] = useState(history)
+    const [deletingId, setDeletingId] = useState<string | null>(null)
 
     const handleChange = (field: keyof Transportista, value: any) => {
         setData(prev => ({ ...prev, [field]: value }))
@@ -27,7 +30,15 @@ export default function TransporterForm({ initialData, history }: { initialData:
         setData(prev => ({ ...prev, estado: 'CERTIFICADO' }))
     }
 
-    const hasApprovedVisits = history.some(h => h.resultado === 'APROBADO')
+    const handleDeleteHistorial = async (pivotId: string) => {
+        if (!confirm('¿Eliminar este registro del historial?')) return;
+        setDeletingId(pivotId)
+        await deleteViajeTransportista(pivotId)
+        setHistorial(prev => prev.filter(h => h.id !== pivotId))
+        setDeletingId(null)
+    }
+
+    const hasApprovedVisits = historial.some(h => h.resultado === 'APROBADO')
     const canCertify = data.estado === 'VERIFICANDO' && hasApprovedVisits
 
     return (
@@ -63,15 +74,20 @@ export default function TransporterForm({ initialData, history }: { initialData:
                     <Input label="Capacidad Max (PAX)" type="number" value={data.capacidad_maxima} onChange={(v: string) => handleChange('capacidad_maxima', parseInt(v))} />
                 </div>
 
-                <div className="flex items-center gap-3 bg-slate-900 p-3 rounded-lg border border-slate-800">
-                    <input
-                        type="checkbox"
+                {/* Checkboxes */}
+                <div className="space-y-2">
+                    <Checkbox
                         id="seguro"
-                        className="w-5 h-5 accent-indigo-500"
-                        checked={data.tiene_seguro_viajero}
-                        onChange={e => handleChange('tiene_seguro_viajero', e.target.checked)}
+                        label="Tiene Seguro de Viajero Vigente"
+                        checked={!!data.tiene_seguro_viajero}
+                        onChange={v => handleChange('tiene_seguro_viajero', v)}
                     />
-                    <label htmlFor="seguro" className="text-sm font-medium">Tiene Seguro de Viajero Vigente</label>
+                    <Checkbox
+                        id="contrato"
+                        label="Contrato Firmado"
+                        checked={!!data.contrato_firmado}
+                        onChange={v => handleChange('contrato_firmado', v)}
+                    />
                 </div>
 
                 <div>
@@ -101,30 +117,45 @@ export default function TransporterForm({ initialData, history }: { initialData:
             <button
                 onClick={handleSave}
                 disabled={loading}
-                className="w-full bg-indigo-600 hover:bg-indigo-500 text-white py-4 rounded-xl font-bold text-lg sticky bottom-4 shadow-xl"
+                className="w-full bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white py-4 rounded-xl font-bold text-lg sticky bottom-4 shadow-xl transition-all"
             >
                 {loading ? 'Guardando...' : 'Guardar Cambios'}
             </button>
 
-            {/* Historial */}
+            {/* Historial con edición/borrado */}
             <div className="pt-8 border-t border-slate-800">
                 <h3 className="text-lg font-bold text-slate-400 mb-4">Historial de Verificaciones</h3>
-                {history.length === 0 ? (
+                {historial.length === 0 ? (
                     <p className="text-slate-600 italic">No verificado en ningún viaje aún.</p>
                 ) : (
                     <div className="space-y-3">
-                        {history.map((h: any) => (
-                            <div key={h.id} className="bg-slate-900 p-3 rounded-lg border border-slate-800 flex justify-between items-center">
-                                <div>
-                                    <div className="text-sm font-bold text-slate-300">{h.viaje?.region || 'Viaje sin región'}</div>
-                                    <div className="text-xs text-slate-500">{h.viaje?.fecha_viaje}</div>
+                        {historial.map((h: any) => (
+                            <div key={h.id} className="bg-slate-900 p-3 rounded-lg border border-slate-800">
+                                <div className="flex justify-between items-center">
+                                    <div>
+                                        <div className="text-sm font-bold text-slate-300">{h.viaje?.region || 'Viaje sin región'}</div>
+                                        <div className="text-xs text-slate-500">{h.viaje?.fecha_viaje}</div>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <span className={`text-xs font-bold px-2 py-1 rounded border 
+                                            ${h.resultado === 'APROBADO' ? 'text-emerald-400 border-emerald-900 bg-emerald-900/20' :
+                                                h.resultado === 'RECHAZADO' ? 'text-rose-400 border-rose-900 bg-rose-900/20' :
+                                                    'text-amber-400 border-amber-900 bg-amber-900/20'}`}>
+                                            {h.resultado}
+                                        </span>
+                                        <button
+                                            onClick={() => handleDeleteHistorial(h.id)}
+                                            disabled={deletingId === h.id}
+                                            className="text-rose-500 hover:text-rose-400 text-xs px-2 py-1 rounded bg-slate-800 hover:bg-rose-900/20 transition-colors disabled:opacity-50"
+                                            title="Eliminar registro"
+                                        >
+                                            {deletingId === h.id ? '...' : '🗑️'}
+                                        </button>
+                                    </div>
                                 </div>
-                                <span className={`text-xs font-bold px-2 py-1 rounded border 
-                                    ${h.resultado === 'APROBADO' ? 'text-emerald-400 border-emerald-900 bg-emerald-900/20' :
-                                        h.resultado === 'RECHAZADO' ? 'text-rose-400 border-rose-900 bg-rose-900/20' :
-                                            'text-amber-400 border-amber-900 bg-amber-900/20'}`}>
-                                    {h.resultado}
-                                </span>
+                                {h.notas_visita && (
+                                    <p className="text-xs text-slate-500 mt-2 italic border-t border-slate-800 pt-2">{h.notas_visita}</p>
+                                )}
                             </div>
                         ))}
                     </div>
@@ -145,6 +176,22 @@ function Input({ label, type = 'text', value, onChange, placeholder }: any) {
                 onChange={e => onChange(e.target.value)}
                 placeholder={placeholder}
             />
+        </div>
+    )
+}
+
+function Checkbox({ id, label, checked, onChange }: { id: string, label: string, checked: boolean, onChange: (v: boolean) => void }) {
+    return (
+        <div className="flex items-center gap-3 bg-slate-900 p-3 rounded-lg border border-slate-800 cursor-pointer" onClick={() => onChange(!checked)}>
+            <input
+                type="checkbox"
+                id={id}
+                className="w-5 h-5 accent-indigo-500 cursor-pointer"
+                checked={checked}
+                onChange={e => onChange(e.target.checked)}
+                onClick={e => e.stopPropagation()}
+            />
+            <label htmlFor={id} className="text-sm font-medium cursor-pointer select-none">{label}</label>
         </div>
     )
 }

@@ -2,22 +2,18 @@ import { createClient } from '@/utils/supabase/server'
 import Link from 'next/link'
 import { createSalida, deleteSalida } from '../actions'
 import { redirect } from 'next/navigation'
-// import dynamic from 'next/dynamic'
 import { ItinerarioSalida } from '../../blueprint'
 
 import MapComponent from '../components/MapComponent'
 
 // Helper to get coordinates
 const getCoords = (city: string, dbCoords?: string | null) => {
-    // 1. Try to parse DB coordinates first
     if (dbCoords) {
         const parts = dbCoords.split(',').map(s => parseFloat(s.trim()));
         if (parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
             return { lat: parts[0], lng: parts[1] };
         }
     }
-
-    // 2. Fallback to hardcoded city map
     const map: Record<string, { lat: number, lng: number }> = {
         'CDMX': { lat: 19.4326, lng: -99.1332 },
         'Querétaro': { lat: 20.5888, lng: -100.3899 },
@@ -26,8 +22,7 @@ const getCoords = (city: string, dbCoords?: string | null) => {
         'Pachuca': { lat: 20.1011, lng: -98.7591 },
         'Cuernavaca': { lat: 18.9242, lng: -99.2216 },
     }
-
-    return map[city] || { lat: 19.4326, lng: -99.1332 } // Default to CDMX
+    return map[city] || { lat: 19.4326, lng: -99.1332 }
 }
 
 export default async function Page() {
@@ -38,59 +33,70 @@ export default async function Page() {
 
     const { data: salidas } = await supabase.from('itinerario_salidas').select('*').order('created_at', { ascending: false })
 
-    // Prepare data for Global Map (Only 'LISTO_PARA_OPERAR')
     const mapTrips = salidas?.filter(s => s.estado === 'LISTO_PARA_OPERAR').map(s => ({
         ...s,
         coords: getCoords(s.ciudad_origen, s.coordenadas_salida),
-        destino_final: s.destino_final.replace(/\s*\(\d+\s*paradas\)/i, '') // Clean for map popup too
+        destino_final: s.destino_final.replace(/\s*\(\d+\s*paradas\)/i, '')
     })) || [];
 
     return (
-        <div className="p-4 max-w-md mx-auto">
-            <h1 className="text-2xl font-bold mb-6">GESTIÓN OPERATIVA - 19/02/2026</h1>
-
-            <div className="mb-8">
-                <h2 className="font-bold text-lg mb-2">Mapa de Salidas</h2>
-                {/* @ts-ignore */}
-                <MapComponent trips={mapTrips} />
+        <div className="min-h-screen bg-black text-slate-200">
+            {/* Header */}
+            <div className="bg-slate-900 border-b border-slate-800 p-4 sticky top-0 z-10 flex items-center gap-4">
+                <Link href="/" className="text-indigo-400 text-sm hover:underline">← Inicio</Link>
+                <h1 className="text-xl font-bold text-white">Gestión Operativa — Salidas</h1>
             </div>
 
-            {/* Botón Nueva Salida Rápida (Demo) */}
-            <form action={async () => {
-                'use server'
-                await createSalida({ ciudad_origen: 'Por Asignar', fecha_salida: '2026-05-20' })
-            }}>
-                <button className="w-full bg-slate-900 text-white py-3 rounded-lg font-bold mb-8">
-                    + Nueva Salida
-                </button>
-            </form>
+            <div className="max-w-md mx-auto p-4">
+                {/* Mapa principal */}
+                <div className="mb-6">
+                    <h2 className="font-bold text-sm uppercase tracking-wider text-slate-400 mb-2">Mapa Operativo</h2>
+                    {/* @ts-ignore */}
+                    <MapComponent trips={mapTrips} />
+                    <p className="text-[10px] text-slate-600 mt-1 text-center">Solo muestra salidas en LISTO PARA OPERAR</p>
+                </div>
 
-            <div className="space-y-4">
-                <h3 className="font-bold text-gray-500 text-sm uppercase">Listado Completo</h3>
-                {salidas?.map((s) => (
-                    <div key={s.id} className="border p-4 rounded-lg hover:bg-slate-50 transition-colors relative group">
-                        <Link href={`/salidas/${s.id_salida}`} className="block">
-                            <div className="flex justify-between items-start mb-2">
-                                <span className="font-mono text-xs font-bold bg-slate-100 px-2 py-1 rounded">{s.id_salida}</span>
-                                <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded border ${s.estado === 'LISTO_PARA_OPERAR' ? 'bg-emerald-100 text-emerald-700 border-emerald-200' :
-                                    s.estado === 'BLOQUEADO' ? 'bg-red-100 text-red-700 border-red-200' : 'bg-amber-50 text-amber-600 border-amber-200'
-                                    }`}>
-                                    {s.estado}
-                                </span>
-                            </div>
-                            <p className="font-bold">{s.ciudad_origen} → {s.destino_final.replace(/\s*\(\d+\s*paradas\)/i, '')}</p>
-                            <p className="text-xs text-slate-500 mt-1">Modo: {s.modo} • {s.fecha_salida}</p>
-                        </Link>
+                {/* CTA Nueva Salida */}
+                <form action={async () => {
+                    'use server'
+                    await createSalida({ ciudad_origen: 'Por Asignar', fecha_salida: '2026-05-20' })
+                }}>
+                    <button className="w-full bg-gradient-to-r from-indigo-600 to-violet-600 text-white py-3 rounded-xl font-bold text-sm uppercase tracking-wider mb-6 hover:from-indigo-500 hover:to-violet-500 transition-all shadow-lg shadow-indigo-500/20">
+                        + Nueva Salida
+                    </button>
+                </form>
 
-                        {/* Delete Button */}
-                        <form action={deleteSalida} className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <input type="hidden" name="id_salida" value={s.id_salida} />
-                            <button className="text-red-500 hover:text-red-700 p-2 bg-white rounded-full shadow-sm hover:bg-red-50" title="Eliminar">
-                                🗑️
-                            </button>
-                        </form>
-                    </div>
-                ))}
+                {/* Listado completo */}
+                <div className="space-y-3">
+                    <h3 className="font-bold text-slate-500 text-xs uppercase tracking-wider">Todas las Salidas</h3>
+                    {salidas?.map((s) => (
+                        <div key={s.id} className="bg-slate-900 border border-slate-800 rounded-xl p-4 relative group hover:border-indigo-500/50 transition-all">
+                            <Link href={`/salidas/${s.id_salida}`} className="block">
+                                <div className="flex justify-between items-start mb-2">
+                                    <span className="font-mono text-xs font-bold bg-slate-800 text-slate-300 px-2 py-1 rounded">{s.id_salida}</span>
+                                    <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded border ${s.estado === 'LISTO_PARA_OPERAR' ? 'bg-emerald-900/50 text-emerald-400 border-emerald-700' :
+                                            s.estado === 'BLOQUEADO' ? 'bg-red-900/50 text-red-400 border-red-700' :
+                                                'bg-amber-900/30 text-amber-400 border-amber-700'
+                                        }`}>
+                                        {s.estado}
+                                    </span>
+                                </div>
+                                <p className="font-bold text-white">{s.ciudad_origen} — {s.destino_final.replace(/\s*\(\d+\s*paradas\)/i, '')}</p>
+                                <p className="text-xs text-slate-500 mt-1">{s.modo} • {s.fecha_salida}</p>
+                            </Link>
+
+                            {/* Delete */}
+                            <form action={deleteSalida} className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <input type="hidden" name="id_salida" value={s.id_salida} />
+                                <button className="text-rose-500 hover:text-rose-400 p-2 bg-slate-800 rounded-full text-xs" title="Eliminar">🗑️</button>
+                            </form>
+                        </div>
+                    ))}
+
+                    {(salidas?.length ?? 0) === 0 && (
+                        <div className="text-center py-10 text-slate-600">No hay salidas registradas.</div>
+                    )}
+                </div>
             </div>
         </div>
     )

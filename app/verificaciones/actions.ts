@@ -127,9 +127,22 @@ export async function updateViajeTransportista(pivotId: string, patch: Partial<V
         .eq('id', pivotId)
 
     if (error) throw new Error(error.message)
+    revalidatePath('/transportistas')
+    revalidatePath('/verificaciones')
+}
 
-    // Nota: No hay revalidatePath especifico porque esto se usa dentro de la lista de pívots
-    // Idealmente revalidamos el viaje
+export async function deleteViajeTransportista(pivotId: string) {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) redirect('/login')
+
+    const { error } = await supabase
+        .from('viaje_transportistas')
+        .delete()
+        .eq('id', pivotId)
+
+    if (error) throw new Error(error.message)
+    revalidatePath('/transportistas')
 }
 
 // --- FOTOS ---

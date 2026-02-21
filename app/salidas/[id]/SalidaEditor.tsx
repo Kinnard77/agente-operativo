@@ -131,12 +131,12 @@ export default function SalidaEditor({ initialItinerario, certifiedTransportista
             {/* --- HEADER --- */}
             <div className="bg-slate-900 border-b border-slate-800 p-4 sticky top-0 z-20 shadow-lg flex justify-between items-center">
                 <div className="flex items-center gap-4">
-                    <Link className="text-indigo-400 text-sm hover:underline" href="/salidas">← Volver</Link>
+                    <Link className="text-indigo-400 text-sm hover:underline" href="/salidas">← Salidas</Link>
                     <div>
-                        <h1 className="text-xl font-bold text-white tracking-tight">
-                            Tour {itinerario.destino || 'Sin Destino'}
+                        <h1 className="text-base font-bold text-white leading-tight">
+                            Salida: {itinerario.ciudad_origen || 'Sin Ciudad'} — {itinerario.destino_final?.replace(/\s*\(\d+\s*paradas\)/i, '') || 'Sin Destino'}
                         </h1>
-                        <p className="text-[10px] text-slate-400">{itinerario.ciudad_salida} • {itinerario.fecha_salida}</p>
+                        <p className="text-[10px] text-slate-400">{itinerario.fecha_salida} · <span className={`font-bold uppercase ${itinerario.auditoria.estado === 'LISTO_PARA_OPERAR' ? 'text-emerald-400' : 'text-amber-400'}`}>{itinerario.auditoria.estado}</span></p>
                     </div>
                 </div>
 
@@ -145,13 +145,7 @@ export default function SalidaEditor({ initialItinerario, certifiedTransportista
                     <div className={`text-xs font-mono transition-opacity duration-300 ${status === 'idle' ? 'opacity-0' : 'opacity-100'}`}>
                         {status === 'saving' && <span className="text-amber-400">Guardando...</span>}
                         {status === 'saved' && <span className="text-emerald-400">✓ Guardado</span>}
-                        {status === 'error' && <span className="text-rose-500">Error al guardar</span>}
-                    </div>
-
-                    <div className={`text-xs px-2 py-1 rounded border font-bold ${itinerario.auditoria.estado === 'LISTO_PARA_OPERAR' ? 'border-emerald-500 text-emerald-500 bg-emerald-950/30' :
-                        'border-amber-500 text-amber-500 bg-amber-950/30'
-                        }`}>
-                        {itinerario.auditoria.estado}
+                        {status === 'error' && <span className="text-rose-500">Error</span>}
                     </div>
                 </div>
             </div>

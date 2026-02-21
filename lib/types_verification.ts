@@ -10,6 +10,7 @@ export interface Transportista {
     tipo_unidades: string;
     capacidad_maxima: number;
     tiene_seguro_viajero: boolean;
+    contrato_firmado?: boolean;
     estado: EstadoTransportista;
     fecha_certificacion?: string;
     notas: string;
