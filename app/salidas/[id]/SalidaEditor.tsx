@@ -128,30 +128,34 @@ export default function SalidaEditor({ initialItinerario, certifiedTransportista
         setStatus('saving')
         setErrorMessage(null)
         try {
-            const result = await updateSalida(newItinerario.id_salida, {
-                ...newItinerario
-            })
-            // Fix 4: Sincronización — reflejar el nuevo estado devuelto por el servidor
-            // `updateSalida` re-valida siempre. Actualizamos auditoria localmente para
-            // que el panel de pendientes se actualice sin esperar router.refresh()
-            if (result?.estado) {
+            const result = await updateSalida(newItinerario.id_salida, { ...newItinerario })
+
+            if (!result.success) {
+                setStatus('error')
+                setErrorMessage(result.error ?? 'Error desconocido al guardar.')
+                return
+            }
+
+            // Sincronizar auditoria con la respuesta del servidor
+            if (result.estado) {
                 setItinerario(prev => ({
                     ...prev,
                     auditoria: {
-                        ...prev.auditoria,
-                        estado: result.estado as any
+                        estado: result.estado as any,
+                        bloqueadores: (result.bloqueadores as any) ?? prev.auditoria.bloqueadores,
+                        timestamp_auditoria: new Date().toISOString()
                     }
                 }))
             }
+
             setStatus('saved')
             setLastSaved(new Date())
             router.refresh()
             setTimeout(() => setStatus('idle'), 2500)
         } catch (e: any) {
-            console.error(e)
+            // Fallback por si hay error de red/serialización
             setStatus('error')
-            // Fix 3: Error traducido al español con campo específico
-            setErrorMessage(traducirError(e.message || 'Error desconocido'))
+            setErrorMessage(traducirError(e?.message ?? 'Error de conexión. Intenta de nuevo.'))
         }
     }, [router])
 

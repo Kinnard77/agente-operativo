@@ -41,53 +41,52 @@ export async function createSalida(payload: IngestaDatosBase) {
 export async function updateSalida(id_salida: string, patch: Partial<ItinerarioSalida>) {
     const supabase = await createClient()
 
-    // 1. Cargar estado actual
-    const { data: records } = await supabase
+    // 1. Auth check
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return { success: false, error: 'Sesión expirada. Vuelve a iniciar sesión.' }
+
+    // 2. Cargar estado actual
+    const { data: records, error: fetchError } = await supabase
         .from('itinerario_salidas')
         .select('itinerario')
         .eq('id_salida', id_salida)
         .order('created_at', { ascending: false })
         .limit(1)
 
+    if (fetchError) return { success: false, error: `Error al leer salida: ${fetchError.message}` }
+
     const record = records?.[0] ?? null
-    if (!record) throw new Error('Salida no encontrada')
+    if (!record) return { success: false, error: `Salida '${id_salida}' no encontrada en la base de datos.` }
 
     let itinerario = record.itinerario as ItinerarioSalida
 
-    // 2. Aplicar Patch (Solo campos permitidos por el Arquitecto)
-    // Aquí podríamos usar funciones de 'operador.ts' si la lógica es compleja.
-    // Por ahora, merge simple superficial para MVP.
+    // 3. Aplicar Patch
     itinerario = { ...itinerario, ...patch }
 
-    // 3. Re-Validar (Siempre autoritario)
+    // 4. Re-Validar (Siempre autoritario)
     itinerario.auditoria = validarItinerario(itinerario)
 
-    // 4. Persistir
-    // 4. Persistir
+    // 5. Persistir
     const { error: saveError } = await supabase
         .from('itinerario_salidas')
         .update({
             itinerario: itinerario,
             estado: itinerario.auditoria.estado,
             modo: itinerario.modo,
-
-            // SYNC CRITICAL COLUMNS
-            coordenadas_salida: itinerario.coordenadas_salida,
+            coordenadas_salida: itinerario.coordenadas_salida ?? null,
             ciudad_origen: itinerario.ciudad_origen,
             destino_final: DESTINO_FIJO,
             fecha_salida: itinerario.fecha_salida,
-
             updated_at: new Date().toISOString()
         })
         .eq('id_salida', id_salida)
 
-
-    if (saveError) throw new Error(saveError.message)
+    if (saveError) return { success: false, error: `Error al guardar (${saveError.code}): ${saveError.message}` }
 
     revalidatePath('/salidas')
     revalidatePath(`/salidas/${id_salida}`)
 
-    return { success: true, estado: itinerario.auditoria.estado }
+    return { success: true, estado: itinerario.auditoria.estado, bloqueadores: itinerario.auditoria.bloqueadores }
 }
 
 export async function deleteSalida(formData: FormData) {
