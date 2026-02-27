@@ -13,8 +13,8 @@ const { createClient } = require('@supabase/supabase-js');
 // =========================================================
 // CONFIGURA AQUÍ TUS CREDENCIALES (solo para esta prueba)
 // =========================================================
-const SUPABASE_URL = process.env.SUPABASE_URL || 'https://czkddpcluizlcftunfcw.supabase.co';
-const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || 'PEGA_TU_SERVICE_ROLE_KEY_AQUI';
+const SUPABASE_URL = 'https://lvitosysjqghyjnyxkcx.supabase.co';
+const SUPABASE_SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx2aXRvc3lzanFnaHlqbnl4a2N4Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2OTMxMjQyMiwiZXhwIjoyMDg0ODg4NDIyfQ.aoIt5l379_d5xO-_KH840MNRw0jalK8PEVvUySpRFYA';
 // =========================================================
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY, {
@@ -31,6 +31,21 @@ async function main() {
         process.exit(1);
     }
     console.log('✅ Supabase OK');
+
+    // Leer user_id de un registro existente (la tabla requiere NOT NULL en user_id)
+    const { data: existing } = await supabase
+        .from('itinerario_salidas')
+        .select('user_id')
+        .not('user_id', 'is', null)
+        .limit(1)
+        .single();
+
+    const USER_ID = existing?.user_id;
+    if (!USER_ID) {
+        console.error('❌ No se encontró ningún user_id en la tabla. Crea un viaje primero desde la app.')
+        process.exit(1);
+    }
+    console.log(`👤 Usando user_id: ${USER_ID}`);
 
     // Limpiar si ya existe un viaje de prueba previo
     await supabase.from('itinerario_salidas').delete().eq('id_salida', TEST_TRIP_ID);
@@ -74,7 +89,12 @@ async function main() {
             estado: 'LISTO_PARA_OPERAR',
             modo: 'CERTIFICACIÓN',
             itinerario,
-            user_id: null  // <- permite null si tu tabla lo acepta; si no, pon el UUID de tu user
+            // Nuevas columnas desnormalizadas
+            precio: 1,
+            punto_encuentro: 'Ángel de la Independencia',
+            pax_meta: 40,
+            coordenadas_salida: '19.42715, -99.16756',
+            user_id: USER_ID
         })
         .select()
         .single();

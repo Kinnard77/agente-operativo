@@ -66,17 +66,23 @@ export async function updateSalida(id_salida: string, patch: Partial<ItinerarioS
     // 4. Re-Validar (Siempre autoritario)
     itinerario.auditoria = validarItinerario(itinerario)
 
-    // 5. Persistir
+    // 5. Persistir — incluye todas las columnas desnormalizadas
     const { error: saveError } = await supabase
         .from('itinerario_salidas')
         .update({
+            // JSONB completo (fuente de verdad)
             itinerario: itinerario,
+            // Columnas desnormalizadas para filtros/queries rápidos
             estado: itinerario.auditoria.estado,
             modo: itinerario.modo,
-            coordenadas_salida: itinerario.coordenadas_salida ?? null,
             ciudad_origen: itinerario.ciudad_origen,
             destino_final: DESTINO_FIJO,
             fecha_salida: itinerario.fecha_salida,
+            coordenadas_salida: itinerario.coordenadas_salida ?? null,
+            // Nuevas columnas creadas por el usuario
+            precio: itinerario.precio_total ?? null,
+            punto_encuentro: itinerario.punto_encuentro ?? null,
+            pax_meta: itinerario.logistica?.capacidad_requerida ?? null,
             updated_at: new Date().toISOString()
         })
         .eq('id_salida', id_salida)
