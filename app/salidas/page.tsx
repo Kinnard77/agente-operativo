@@ -2,7 +2,7 @@ import { createClient } from '@/utils/supabase/server'
 import Link from 'next/link'
 import { createSalida, deleteSalida } from '../actions'
 import { redirect } from 'next/navigation'
-import { ItinerarioSalida } from '../../blueprint'
+import { ItinerarioSalida, DESTINO_FIJO } from '../../blueprint'
 
 import MapComponent from '../components/MapComponent'
 
@@ -34,9 +34,7 @@ export default async function Page() {
     const { data: salidas } = await supabase.from('itinerario_salidas').select('*').order('created_at', { ascending: false })
 
     const mapTrips = salidas?.filter(s => s.estado === 'LISTO_PARA_OPERAR').map(s => ({
-        ...s,
         coords: getCoords(s.ciudad_origen, s.coordenadas_salida),
-        destino_final: s.destino_final.replace(/\s*\(\d+\s*paradas\)/i, '')
     })) || [];
 
     return (
@@ -73,15 +71,19 @@ export default async function Page() {
                         <div key={s.id} className="bg-slate-900 border border-slate-800 rounded-xl p-4 relative group hover:border-indigo-500/50 transition-all">
                             <Link href={`/salidas/${s.id_salida}`} className="block">
                                 <div className="flex justify-between items-start mb-2">
-                                    <span className="font-mono text-xs font-bold bg-slate-800 text-slate-300 px-2 py-1 rounded">{s.id_salida}</span>
+                                    {s.estado === 'LISTO_PARA_OPERAR' ? (
+                                        <span className="font-mono text-xs font-bold bg-slate-800 text-slate-300 px-2 py-1 rounded">{s.id_salida}</span>
+                                    ) : (
+                                        <span className="font-mono text-xs text-slate-600 px-2 py-1 rounded border border-dashed border-slate-700">— Sin código —</span>
+                                    )}
                                     <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded border ${s.estado === 'LISTO_PARA_OPERAR' ? 'bg-emerald-900/50 text-emerald-400 border-emerald-700' :
-                                            s.estado === 'BLOQUEADO' ? 'bg-red-900/50 text-red-400 border-red-700' :
-                                                'bg-amber-900/30 text-amber-400 border-amber-700'
+                                        s.estado === 'BLOQUEADO' ? 'bg-red-900/50 text-red-400 border-red-700' :
+                                            'bg-amber-900/30 text-amber-400 border-amber-700'
                                         }`}>
                                         {s.estado}
                                     </span>
                                 </div>
-                                <p className="font-bold text-white">{s.ciudad_origen} — {s.destino_final.replace(/\s*\(\d+\s*paradas\)/i, '')}</p>
+                                <p className="font-bold text-white">{s.ciudad_origen} — {DESTINO_FIJO}</p>
                                 <p className="text-xs text-slate-500 mt-1">{s.modo} • {s.fecha_salida}</p>
                             </Link>
 

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { ItinerarioSalida, CheckpointOperativo, Hora } from '@/blueprint'
+import { ItinerarioSalida, CheckpointOperativo, Hora, DESTINO_FIJO, BlockerOperativo } from '@/blueprint'
 import { updateSalida, assignTransporter } from '../../actions'
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
@@ -30,6 +30,91 @@ const parseCoords = (coordsStr: string): { lat: number, lng: number } | null => 
     return null;
 }
 
+// --- Fix 3: Traducción de errores de Supabase/validación a español con campo específico ---
+function traducirError(raw: string): string {
+    const e = raw.toLowerCase()
+    if (e.includes('not null') || e.includes('null value')) {
+        if (e.includes('ciudad_origen')) return 'Campo requerido: Ciudad de Origen no puede estar vacía.'
+        if (e.includes('fecha_salida')) return 'Campo requerido: Fecha de Salida no puede estar vacía.'
+        if (e.includes('estado')) return 'Campo requerido: Estado del itinerario no fue calculado correctamente.'
+        return 'Campo requerido sin completar. Revisa los datos del formulario.'
+    }
+    if (e.includes('unique') || e.includes('duplicate')) return 'Ya existe una salida con ese identificador.'
+    if (e.includes('not found') || e.includes('no encontr')) return 'La salida no fue encontrada en la base de datos.'
+    if (e.includes('jwt') || e.includes('auth') || e.includes('unauthorized')) return 'Sesión expirada. Vuelve a iniciar sesión.'
+    if (e.includes('network') || e.includes('fetch')) return 'Error de conexión. Verifica tu internet e intenta de nuevo.'
+    if (e.includes('timeout')) return 'La operación tardó demasiado. Intenta de nuevo.'
+    // Si no hay traducción específica, devolver el original en contexto
+    return `Error al guardar: ${raw}`
+}
+
+// --- Panel de Pendientes dinámico ---
+const CATEGORIA_ICON: Record<string, string> = {
+    CRONOGRAMA: '🕐',
+    RUTA: '📍',
+    'LOGÍSTICA': '🚌',
+}
+
+function PanelPendientes({ bloqueadores }: { bloqueadores: BlockerOperativo[] }) {
+    if (bloqueadores.length === 0) {
+        return (
+            <div className="flex items-center gap-2 p-3 bg-emerald-900/20 border border-emerald-700/50 rounded-lg">
+                <span className="text-emerald-400 text-base">✅</span>
+                <p className="text-emerald-400 text-xs font-bold">Todo completo — listo para operar</p>
+            </div>
+        )
+    }
+
+    const criticos = bloqueadores.filter(b => b.critico)
+    const pendientes = bloqueadores.filter(b => !b.critico)
+
+    return (
+        <section className="bg-slate-900/50 border border-amber-800/40 rounded p-4 space-y-2">
+            <h2 className="text-amber-400 font-bold text-xs uppercase tracking-wider mb-3 flex items-center gap-2">
+                <span>⚠️</span>
+                Pendientes del Viaje
+                <span className="ml-auto bg-amber-900/40 text-amber-300 text-[10px] font-black px-2 py-0.5 rounded-full border border-amber-700">
+                    {bloqueadores.length} pendiente{bloqueadores.length !== 1 ? 's' : ''}
+                </span>
+            </h2>
+
+            {criticos.length > 0 && (
+                <div className="space-y-1.5">
+                    <p className="text-[9px] uppercase font-bold text-rose-400/70 tracking-widest">Bloqueadores críticos</p>
+                    {criticos.map((b, i) => (
+                        <div key={i} className="flex items-start gap-2 p-2 bg-rose-900/20 border border-rose-700/40 rounded">
+                            <span className="text-sm shrink-0">{CATEGORIA_ICON[b.categoria] ?? '⚡'}</span>
+                            <div>
+                                <p className="text-xs text-rose-300 font-medium">{b.mensaje}</p>
+                                {b.evidencia_requerida && (
+                                    <p className="text-[10px] text-rose-400/60 mt-0.5">→ {b.evidencia_requerida}</p>
+                                )}
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            )}
+
+            {pendientes.length > 0 && (
+                <div className="space-y-1.5">
+                    {criticos.length > 0 && <p className="text-[9px] uppercase font-bold text-amber-400/70 tracking-widest pt-1">Pendientes</p>}
+                    {pendientes.map((b, i) => (
+                        <div key={i} className="flex items-start gap-2 p-2 bg-amber-900/10 border border-amber-800/30 rounded">
+                            <span className="text-sm shrink-0">{CATEGORIA_ICON[b.categoria] ?? '📌'}</span>
+                            <div>
+                                <p className="text-xs text-amber-300 font-medium">{b.mensaje}</p>
+                                {b.evidencia_requerida && (
+                                    <p className="text-[10px] text-amber-400/60 mt-0.5">→ {b.evidencia_requerida}</p>
+                                )}
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            )}
+        </section>
+    )
+}
+
 export default function SalidaEditor({ initialItinerario, certifiedTransportistas }: { initialItinerario: ItinerarioSalida, certifiedTransportistas: any[] }) {
     const router = useRouter()
 
@@ -39,41 +124,34 @@ export default function SalidaEditor({ initialItinerario, certifiedTransportista
     const [errorMessage, setErrorMessage] = useState<string | null>(null)
     const [lastSaved, setLastSaved] = useState<Date | null>(null)
 
-    // Autosave Logic (Debounced)
-    useEffect(() => {
-        const timer = setTimeout(async () => {
-            if (status === 'saving') return // Already saving? actually this logic is tricky with debounce.
-            // Better approach: When itinerario changes, set status to 'pending-save'. 
-            // Then another effect watches 'pending-save' and triggers save after delay.
-        }, 1000)
-        return () => clearTimeout(timer)
-    }, [itinerario])
-
-    // Specific Autosave Implementation
-    // We will trigger save immediately on blur or specific actions for now to be robust, 
-    // or use a separate "dirty" flag.
-    // Let's use a simpler "Trigger Save" function that we call explicitly on blur/change complete.
-
     const saveChanges = useCallback(async (newItinerario: ItinerarioSalida) => {
         setStatus('saving')
         setErrorMessage(null)
         try {
-            await updateSalida(newItinerario.id_salida, {
-                // We send specific fields or the whole object depending on backend logic.
-                // For MVP actions.ts handles a merge, so we can send the whole thing or parts.
-                // Let's send the whole updated JSONB structure to be safe.
+            const result = await updateSalida(newItinerario.id_salida, {
                 ...newItinerario
             })
+            // Fix 4: Sincronización — reflejar el nuevo estado devuelto por el servidor
+            // `updateSalida` re-valida siempre. Actualizamos auditoria localmente para
+            // que el panel de pendientes se actualice sin esperar router.refresh()
+            if (result?.estado) {
+                setItinerario(prev => ({
+                    ...prev,
+                    auditoria: {
+                        ...prev.auditoria,
+                        estado: result.estado as any
+                    }
+                }))
+            }
             setStatus('saved')
             setLastSaved(new Date())
             router.refresh()
-
-            // Output visual feedback reset
-            setTimeout(() => setStatus('idle'), 2000)
+            setTimeout(() => setStatus('idle'), 2500)
         } catch (e: any) {
             console.error(e)
             setStatus('error')
-            setErrorMessage(e.message || 'Error desconocido')
+            // Fix 3: Error traducido al español con campo específico
+            setErrorMessage(traducirError(e.message || 'Error desconocido'))
         }
     }, [router])
 
@@ -84,28 +162,24 @@ export default function SalidaEditor({ initialItinerario, certifiedTransportista
 
         // SYNC LOGIC: Top -> Bottom
         if (field === 'hora_salida') {
-            // Sync to first checkpoint
             if (next.ruta_critica.length > 0) {
                 next.ruta_critica[0].h_salida = toHora(value)
             }
         }
         if (field === 'punto_encuentro') {
-            // Sync to first checkpoint
             if (next.ruta_critica.length > 0) {
                 next.ruta_critica[0].localizacion = value
             }
         }
 
         setItinerario(next)
-        // Trigger save? For text inputs, maybe wait for blur. 
-        // For selects/toggles, trigger now.
     }
 
     const handleBlur = () => {
         saveChanges(itinerario)
     }
 
-    // --- Complex Updaters (Delegated to Operator Logic) ---
+    // --- Complex Updaters ---
 
     const handleCronogramaChange = (id: string, type: 'l' | 's', val: string) => {
         const next = JSON.parse(JSON.stringify(itinerario)) as ItinerarioSalida
@@ -114,17 +188,13 @@ export default function SalidaEditor({ initialItinerario, certifiedTransportista
             if (type === 'l') cp.h_llegada = toHora(val)
             if (type === 's') cp.h_salida = toHora(val)
         }
-
-        // If first point modified, sync back to Top? (Optional, maybe Bottom -> Top too?)
-        // Let's keep Top -> Bottom authoritative for now.
-
         setItinerario(next)
-        // We'll save on blur of the inputs
     }
 
     // --- Render ---
 
-    const isPlanning = itinerario.auditoria.estado === 'INCOMPLETO' || itinerario.auditoria.estado === 'BLOQUEADO'
+    const bloqueadores = itinerario.auditoria?.bloqueadores ?? []
+    const isListo = itinerario.auditoria.estado === 'LISTO_PARA_OPERAR'
 
     return (
         <div className="min-h-screen bg-black text-slate-200 pb-20">
@@ -134,9 +204,9 @@ export default function SalidaEditor({ initialItinerario, certifiedTransportista
                     <Link className="text-indigo-400 text-sm hover:underline" href="/salidas">← Salidas</Link>
                     <div>
                         <h1 className="text-base font-bold text-white leading-tight">
-                            Salida: {itinerario.ciudad_origen || 'Sin Ciudad'} — {itinerario.destino_final?.replace(/\s*\(\d+\s*paradas\)/i, '') || 'Sin Destino'}
+                            Salida: {itinerario.ciudad_origen || 'Sin Ciudad'} — {DESTINO_FIJO}
                         </h1>
-                        <p className="text-[10px] text-slate-400">{itinerario.fecha_salida} · <span className={`font-bold uppercase ${itinerario.auditoria.estado === 'LISTO_PARA_OPERAR' ? 'text-emerald-400' : 'text-amber-400'}`}>{itinerario.auditoria.estado}</span></p>
+                        <p className="text-[10px] text-slate-400">{itinerario.fecha_salida} · <span className={`font-bold uppercase ${isListo ? 'text-emerald-400' : itinerario.auditoria.estado === 'BLOQUEADO' ? 'text-rose-400' : 'text-amber-400'}`}>{itinerario.auditoria.estado}</span></p>
                     </div>
                 </div>
 
@@ -150,7 +220,10 @@ export default function SalidaEditor({ initialItinerario, certifiedTransportista
                 </div>
             </div>
 
-            <div className="max-w-xl mx-auto p-4 space-y-8 mt-4">
+            <div className="max-w-xl mx-auto p-4 space-y-6 mt-4">
+
+                {/* --- PANEL DE PENDIENTES (Fix 2) --- */}
+                <PanelPendientes bloqueadores={bloqueadores} />
 
                 {/* --- 1. DATOS GENERALES --- */}
                 <section className="bg-slate-900/50 border border-slate-800 rounded p-4">
@@ -270,9 +343,14 @@ export default function SalidaEditor({ initialItinerario, certifiedTransportista
                                     const next = { ...itinerario, transportista_id: val };
                                     setItinerario(next);
                                     setStatus('saving');
-                                    await assignTransporter(itinerario.id_salida, val);
-                                    setStatus('saved');
-                                    setTimeout(() => setStatus('idle'), 2000);
+                                    try {
+                                        await assignTransporter(itinerario.id_salida, val);
+                                        setStatus('saved');
+                                        setTimeout(() => setStatus('idle'), 2000);
+                                    } catch (e: any) {
+                                        setStatus('error');
+                                        setErrorMessage(traducirError(e.message));
+                                    }
                                 }}
                             >
                                 <option value="">-- Por Asignar --</option>
@@ -308,7 +386,7 @@ export default function SalidaEditor({ initialItinerario, certifiedTransportista
                                         value={fromHora(cp.h_llegada)}
                                         onChange={e => handleCronogramaChange(cp.id, 'l', e.target.value)}
                                         onBlur={handleBlur}
-                                        disabled={idx === 0} // First point arrival usually irrelevant or same as dep? Keep active just in case
+                                        disabled={idx === 0}
                                     />
                                 </div>
                                 <div className="flex flex-col items-end">
@@ -319,9 +397,6 @@ export default function SalidaEditor({ initialItinerario, certifiedTransportista
                                         value={fromHora(cp.h_salida)}
                                         onChange={e => handleCronogramaChange(cp.id, 's', e.target.value)}
                                         onBlur={handleBlur}
-                                        disabled={idx === 0} // First point Output controlled by Header?
-                                    // Actually user requested Sync Top -> Bottom. So if they edit here, does it update top? 
-                                    // For now let's leave enabled but Top writes to here.
                                     />
                                 </div>
                             </div>
@@ -329,8 +404,8 @@ export default function SalidaEditor({ initialItinerario, certifiedTransportista
                     </div>
                 </section>
 
-                {/* --- MANUAL SAVE BUTTON --- */}
-                <div className="pt-8">
+                {/* --- MANUAL SAVE BUTTON (Fix 4) --- */}
+                <div className="pt-4">
                     <button
                         onClick={() => saveChanges(itinerario)}
                         disabled={status === 'saving'}
@@ -345,25 +420,31 @@ export default function SalidaEditor({ initialItinerario, certifiedTransportista
                     >
                         {status === 'saving' ? 'Guardando...' :
                             status === 'saved' ? '¡Cambios Guardados!' :
-                                status === 'error' ? 'Error al Guardar' :
+                                status === 'error' ? 'Error al Guardar — Intenta de Nuevo' :
                                     'Guardar Cambios'}
                     </button>
+
                     {status === 'saved' && (
                         <p className="text-center text-emerald-400 text-xs mt-2 animate-pulse">
-                            Datos sincronizados correctamente
+                            Datos sincronizados con Supabase · Estado: {itinerario.auditoria.estado}
                         </p>
                     )}
-                    {status === 'error' && (
-                        <p className="text-center text-rose-400 text-xs mt-2 font-mono bg-rose-950/30 p-2 rounded border border-rose-900">
-                            {errorMessage}
-                        </p>
+                    {status === 'error' && errorMessage && (
+                        <div className="mt-2 p-3 bg-rose-950/40 border border-rose-800 rounded-lg">
+                            <p className="text-rose-300 text-xs font-mono leading-relaxed">⚠️ {errorMessage}</p>
+                        </div>
                     )}
                 </div>
 
                 {/* --- FOOTER --- */}
                 <div className="text-center pt-8 pb-4 border-t border-slate-900/50 mt-8">
                     <p className="text-[10px] text-slate-600 font-mono">
-                        ID TÉCNICO: {itinerario.id_salida} <br />
+                        {isListo ? (
+                            <>ID SALIDA: {itinerario.id_salida}</>
+                        ) : (
+                            <>ID visible cuando estado sea LISTO PARA OPERAR</>
+                        )}
+                        {' '}<br />
                         UUID: {itinerario.id} <br />
                         MODO: {itinerario.modo}
                     </p>

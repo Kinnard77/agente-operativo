@@ -4,7 +4,7 @@ import React from 'react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
-import { ItinerarioSalida } from '../../blueprint';
+import { ItinerarioSalida, DESTINO_FIJO } from '../../blueprint';
 
 // Fix moved to useEffect
 
@@ -37,7 +37,7 @@ const MapComponent = ({ trips }: MapComponentProps) => {
                     <Popup>
                         <strong>{trip.ciudad_origen}</strong><br />
                         {trip.fecha_salida}<br />
-                        {trip.destino_final}
+                        {DESTINO_FIJO}
                     </Popup>
                 </Marker>
             ))}

@@ -1,4 +1,4 @@
-import { ItinerarioSalida, CheckpointOperativo } from './blueprint';
+import { ItinerarioSalida, CheckpointOperativo, DESTINO_FIJO } from './blueprint';
 
 export interface IngestaDatosBase {
     ciudad_origen: string;
@@ -60,11 +60,9 @@ export function generarBorradorItinerario(datos: IngestaDatosBase): ItinerarioSa
         hora_salida: (datos.hora_salida as any) || "07:00",
         ciudad_salida: datos.ciudad_origen,
         punto_encuentro: "POR DEFINIR", // Requiere input manual del operador
-        destino: "Tour Odisea Challenge",
 
         // Internal fields
         ciudad_origen: datos.ciudad_origen,
-        destino_final: "Tour Odisea Challenge (4 paradas)",
         fecha_salida: datos.fecha_salida,
         timestamp_creacion: timestamp,
         modo: 'PLANEACIÓN',

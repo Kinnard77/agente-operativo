@@ -5,7 +5,7 @@ import { revalidatePath } from 'next/cache'
 import { createClient } from '@/utils/supabase/server'
 import { generarBorradorItinerario, IngestaDatosBase } from '@/ingesta'
 import { validarItinerario } from '@/validator'
-import { CheckpointOperativo, ItinerarioSalida } from '@/blueprint'
+import { CheckpointOperativo, ItinerarioSalida, DESTINO_FIJO } from '@/blueprint'
 import { generarPaqueteTransportistaHTML } from '@/paquete_transportista'
 
 // --- 1. CREAR SALIDA ---
@@ -25,7 +25,7 @@ export async function createSalida(payload: IngestaDatosBase) {
     const { error } = await supabase.from('itinerario_salidas').insert({
         id_salida: itinerario.id_salida,
         ciudad_origen: itinerario.ciudad_origen,
-        destino_final: itinerario.destino_final,
+        destino_final: DESTINO_FIJO,
         fecha_salida: itinerario.fecha_salida,
         estado: itinerario.auditoria.estado,
         modo: itinerario.modo,
@@ -74,7 +74,7 @@ export async function updateSalida(id_salida: string, patch: Partial<ItinerarioS
             // SYNC CRITICAL COLUMNS
             coordenadas_salida: itinerario.coordenadas_salida,
             ciudad_origen: itinerario.ciudad_origen,
-            destino_final: itinerario.destino_final,
+            destino_final: DESTINO_FIJO,
             fecha_salida: itinerario.fecha_salida,
 
             updated_at: new Date().toISOString()

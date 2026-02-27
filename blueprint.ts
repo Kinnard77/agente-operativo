@@ -4,6 +4,9 @@
  * @description Estructura de datos para el MVP de Cronograma Rígido.
  */
 
+// Destino canónico del negocio — nunca cambia
+export const DESTINO_FIJO = "Odisea Challenge";
+
 // Tipo estricto para horarios
 export type Hora = "POR DEFINIR" | `${number}${number}:${number}${number}`;
 
@@ -41,8 +44,7 @@ export interface ItinerarioSalida {
     ciudad_salida: string; // Alias de ciudad_origen
     punto_encuentro: string;
     coordenadas_salida?: string; // "lat, lng"
-    destino_final: string;
-    destino: string; // Alias de destino_final
+    // destino_final y destino eliminados — usar DESTINO_FIJO (constante de negocio)
     fecha_salida: string;
     timestamp_creacion: string;
 

@@ -3,6 +3,7 @@ import puppeteer from "puppeteer";
 import { createClient } from "@supabase/supabase-js";
 import { renderCarrierPacketHtml } from "@/lib/carrierPacket/renderCarrierPacketHtml";
 import QRCode from "qrcode";
+import { DESTINO_FIJO } from "@/blueprint";
 
 export const runtime = "nodejs";
 
@@ -50,7 +51,7 @@ export async function GET(req: Request) {
 
         const { data: row, error } = await supabase
             .from("itinerario_salidas")
-            .select("id,id_salida,ciudad_origen,destino_final,fecha_salida,estado,itinerario,created_at,updated_at,transportista_id")
+            .select("id,id_salida,ciudad_origen,fecha_salida,estado,itinerario,created_at,updated_at,transportista_id")
             .eq("id", itineraryId)
             .single();
 
@@ -246,11 +247,11 @@ export async function GET(req: Request) {
             route: {
                 city: row.ciudad_origen ?? "",
                 date_local: row.fecha_salida ?? "",
-                service_name: `Salida ${row.id_salida ?? ""} → ${row.destino_final ?? ""}`.trim(),
+                service_name: `Salida ${row.id_salida ?? ""} → ${DESTINO_FIJO}`.trim(),
             },
             mission: {
                 origen: row.ciudad_origen ?? "",
-                destino: row.destino_final ?? "",
+                destino: DESTINO_FIJO,
                 pax_requerida: row.itinerario?.logistica?.capacidad_requerida ?? "",
                 ventana_comida_inicio: row.itinerario?.ventana_comida?.inicio ?? "",
                 ventana_comida_fin: row.itinerario?.ventana_comida?.fin ?? "",
