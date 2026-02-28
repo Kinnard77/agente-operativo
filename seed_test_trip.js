@@ -13,8 +13,8 @@ const { createClient } = require('@supabase/supabase-js');
 // =========================================================
 // CONFIGURA AQUÍ TUS CREDENCIALES (solo para esta prueba)
 // =========================================================
-const SUPABASE_URL = 'https://lvitosysjqghyjnyxkcx.supabase.co';
-const SUPABASE_SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx2aXRvc3lzanFnaHlqbnl4a2N4Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2OTMxMjQyMiwiZXhwIjoyMDg0ODg4NDIyfQ.aoIt5l379_d5xO-_KH840MNRw0jalK8PEVvUySpRFYA';
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
 // =========================================================
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY, {
