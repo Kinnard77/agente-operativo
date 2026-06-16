@@ -3,8 +3,7 @@ import Link from 'next/link'
 import { createSalida, deleteSalida } from '../actions'
 import { redirect } from 'next/navigation'
 import { ItinerarioSalida, DESTINO_FIJO } from '../../blueprint'
-
-import MapComponent from '../components/MapComponent'
+import MapWrapper from './MapWrapper'
 
 // Helper to get coordinates
 const getCoords = (city: string, dbCoords?: string | null) => {
@@ -34,6 +33,7 @@ export default async function Page() {
     const { data: salidas } = await supabase.from('itinerario_salidas').select('*').order('created_at', { ascending: false })
 
     const mapTrips = salidas?.filter(s => s.estado === 'LISTO_PARA_OPERAR').map(s => ({
+        ...s,
         coords: getCoords(s.ciudad_origen, s.coordenadas_salida),
     })) || [];
 
@@ -49,8 +49,7 @@ export default async function Page() {
                 {/* Mapa principal */}
                 <div className="mb-6">
                     <h2 className="font-bold text-sm uppercase tracking-wider text-slate-400 mb-2">Mapa Operativo</h2>
-                    {/* @ts-ignore */}
-                    <MapComponent trips={mapTrips} />
+                    <MapWrapper trips={mapTrips} />
                     <p className="text-[10px] text-slate-600 mt-1 text-center">Solo muestra salidas en LISTO PARA OPERAR</p>
                 </div>
 
