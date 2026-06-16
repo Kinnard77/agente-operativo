@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <style>
+    body { font-family: Arial, sans-serif; color:#333; line-height:1.4; max-width:900px; margin:0 auto; padding:40px; }
+    .header { border-bottom:3px solid #000; padding-bottom:10px; margin-bottom:30px; display:flex; justify-content:space-between; align-items:center; }
+    .header h1 { margin:0; font-size:28px; color:#000; }
+    .badge { color:#d30000; font-weight:bold; font-size:12px; border:1px solid #d30000; padding:5px 8px; }
+    .summary-box { background:#f9f9f9; border:1px solid #ddd; padding:20px; margin-bottom:30px; border-radius:5px; }
+    .summary-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; font-size:14px; }
+    .section-title { background:#000; color:#fff; padding:8px 15px; margin-top:30px; margin-bottom:15px; text-transform:uppercase; font-size:15px; font-weight:bold; }
+    table { width:100%; border-collapse:collapse; margin-bottom:20px; font-size:14px; }
+    th { background-color:#f2f2f2; border:1px solid #ddd; padding:12px; text-align:left; }
+    td { border:1px solid #ddd; padding:12px; }
+    .comida-highlight { background-color:#fff9e6; font-weight:bold; }
+    .responsibilities-list { list-style:none; padding:0; margin:0; }
+    .responsibilities-list li { margin-bottom:10px; padding-left:18px; position:relative; }
+    .responsibilities-list li:before { content:"▪"; position:absolute; left:0; color:#000; }
+    .confirmation-table { width:100%; border:2px solid #000; margin-top:20px; }
+    .confirmation-table td { padding:14px; vertical-align:top; }
+    .checkbox-cell { width:34px; text-align:center; font-size:20px; }
+    .footer { margin-top:40px; font-size:11px; color:#666; text-align:center; border-top:1px solid #eee; padding-top:15px; }
+    .signature-line { border-top:1px solid #000; width:260px; margin-top:70px; text-align:center; padding-top:10px; font-weight:bold; }
+    .small { font-size:12px; color:#555; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div>
+      <h1>Tour Odisea Challenge</h1>
+      <p><strong>SOLICITUD DE COTIZACIÓN / DISPONIBILIDAD PARA TRANSPORTISTA</strong></p>
+      <div class="small">Documento de planeación — horarios y punto de salida pueden estar por definir.</div>
+    </div>
+    <div class="badge">USO EXTERNO — COTIZACIÓN</div>
+  </div>
+
+  <div class="summary-box">
+    <div class="summary-grid">
+      <div><strong>ID DE SALIDA:</strong> SAL-QUE-20260520</div>
+      <div><strong>FECHA DE SERVICIO:</strong> 2026-05-20</div>
+      <div><strong>CIUDAD ORIGEN:</strong> Dolores Hidalgo, Gto.</div>
+      <div><strong>CAPACIDAD ESTIMADA:</strong> 20 PAX</div>
+      <div><strong>PUNTO DE SALIDA:</strong> POR DEFINIR</div>
+      <div><strong>CONTACTO OPERATIVO (ODISEA):</strong> POR ASIGNAR</div>
+    </div>
+  </div>
+
+  <div class="section-title">I. Itinerario (Borrador para Cotización)</div>
+  <table>
+    <thead>
+      <tr>
+        <th>Parada / Punto de Control</th>
+        <th>Llegada</th>
+        <th>Salida</th>
+        <th>Observaciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Querétaro</td>
+        <td>POR DEFINIR</td>
+        <td>POR DEFINIR</td>
+        <td>-</td>
+      </tr>
+      <tr>
+        <td>Checkpoint 1</td>
+        <td>POR DEFINIR</td>
+        <td>POR DEFINIR</td>
+        <td>-</td>
+      </tr>
+      <tr class="comida-highlight">
+        <td>COMIDA (Parada Rígida)</td>
+        <td>POR DEFINIR</td>
+        <td>POR DEFINIR</td>
+        <td><strong>Parada rígida.</strong> Ventana: POR DEFINIR – POR DEFINIR</td>
+      </tr>
+      <tr>
+        <td>Checkpoint 2</td>
+        <td>POR DEFINIR</td>
+        <td>POR DEFINIR</td>
+        <td>-</td>
+      </tr>
+      <tr>
+        <td>Tour Odisea Challenge (Meta)</td>
+        <td>POR DEFINIR</td>
+        <td>POR DEFINIR</td>
+        <td>-</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="section-title">II. Responsabilidades del Transportista</div>
+  <ul class="responsibilities-list">
+    <li><strong>Puntualidad:</strong> Compromiso de cumplimiento de los horarios acordados. (En esta etapa los horarios pueden estar por definir; se confirmarán en la versión final de operación).</li>
+    <li><strong>Seguros de viajero:</strong> Contar con seguros de viajero vigentes y suficientes durante toda la operación del servicio.</li>
+  </ul>
+
+  <div class="section-title">III. Confirmaciones del Proveedor (Para Cotización)</div>
+  <table class="confirmation-table">
+    <tr>
+      <td class="checkbox-cell">☐</td>
+      <td>Confirmo <strong>disponibilidad</strong> para la fecha y capacidad solicitada.</td>
+      <td class="checkbox-cell">☐</td>
+      <td>Confirmo contar con <strong>seguro de viajero vigente</strong> para este servicio.</td>
+    </tr>
+    <tr>
+      <td class="checkbox-cell">☐</td>
+      <td>Comparto <strong>contacto de coordinación</strong> del servicio (nombre y teléfono).</td>
+      <td class="checkbox-cell">☐</td>
+      <td>Envío <strong>cotización</strong> (monto y condiciones).</td>
+    </tr>
+  </table>
+
+  <div style="display:flex; justify-content:space-around; margin-top:40px;">
+    <div class="signature-line">Firma del Proveedor</div>
+    <div class="signature-line">Sello / Firma Odisea Challenge</div>
+  </div>
+
+  <div class="footer">
+    Paquete Corporativo — Transportista (Planeación/Cotización) | v1.2 MVP | Uso externo
+  </div>
+</body>
+</html>
