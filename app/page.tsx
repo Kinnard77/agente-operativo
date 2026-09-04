@@ -11,7 +11,7 @@ export default async function Home() {
         <p className="text-slate-500 mt-2">Hub de Operaciones y Logística</p>
       </header>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
 
         {/* Module 1: Salidas */}
         <Link href="/salidas" className="group bg-slate-900 border border-slate-800 p-8 rounded-2xl hover:border-indigo-500/50 hover:bg-slate-900/80 transition-all">
@@ -32,6 +32,13 @@ export default async function Home() {
           <div className="text-4xl mb-4">📋</div>
           <h2 className="text-2xl font-bold text-white group-hover:text-amber-300">Verificaciones</h2>
           <p className="text-slate-500 mt-2">Control de viáticos, scouting y validación en campo.</p>
+        </Link>
+
+        {/* Module 4: Reseñas */}
+        <Link href="/resenas" className="group bg-slate-900 border border-slate-800 p-8 rounded-2xl hover:border-orange-500/50 hover:bg-slate-900/80 transition-all">
+          <div className="text-4xl mb-4">⭐</div>
+          <h2 className="text-2xl font-bold text-white group-hover:text-orange-300">Reseñas</h2>
+          <p className="text-slate-500 mt-2">Moderación y monitoreo de opiniones de pasajeros.</p>
         </Link>
 
       </div>

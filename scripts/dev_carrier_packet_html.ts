@@ -1,4 +1,4 @@
-import { renderCarrierPacketHtml } from "../pwa/lib/carrierPacket/renderCarrierPacketHtml";
+import { renderCarrierPacketHtml } from "../lib/carrierPacket/renderCarrierPacketHtml";
 
 const html = renderCarrierPacketHtml({
   itinerary_id: "it_test_001",
