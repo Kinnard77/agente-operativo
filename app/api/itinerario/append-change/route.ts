@@ -27,11 +27,11 @@ export async function POST(req: Request) {
 
     const supabase = getAdminSupabase();
 
-    // 1) leer itinerario jsonb
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(itineraryId);
     const { data: row, error: readErr } = await supabase
       .from("itinerario_salidas")
       .select("id,itinerario")
-      .eq("id", itineraryId)
+      .eq(isUuid ? "id" : "id_salida", itineraryId)
       .single();
 
     if (readErr || !row) {
@@ -49,11 +49,11 @@ export async function POST(req: Request) {
       cambios_ultimo_momento: [...changes, entry],
     };
 
-    // 2) actualizar
+    // 2) actualizar usando la llave id real de la fila obtenida
     const { error: upErr } = await supabase
       .from("itinerario_salidas")
       .update({ itinerario: nextItinerario, updated_at: now })
-      .eq("id", itineraryId);
+      .eq("id", row.id);
 
     if (upErr) {
       return NextResponse.json({ ok: false, error: upErr.message }, { status: 500 });

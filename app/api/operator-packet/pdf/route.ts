@@ -49,10 +49,11 @@ export async function GET(req: Request) {
 
         const supabase = getAdminSupabase();
 
+        const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(itineraryId);
         const { data: row, error } = await supabase
             .from("itinerario_salidas")
             .select("id,id_salida,ciudad_origen,fecha_salida,estado,itinerario,created_at,updated_at,transportista_id")
-            .eq("id", itineraryId)
+            .eq(isUuid ? "id" : "id_salida", itineraryId)
             .single();
 
         if (error || !row) {

@@ -42,10 +42,11 @@ export async function GET(req: Request) {
 
     const supabase = getAdminSupabase();
 
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(itineraryId);
     const { data: row, error: readErr } = await supabase
       .from("itinerario_salidas")
       .select("id,itinerario")
-      .eq("id", itineraryId)
+      .eq(isUuid ? "id" : "id_salida", itineraryId)
       .single();
 
     if (readErr || !row) {
@@ -89,7 +90,7 @@ export async function GET(req: Request) {
     const { error: upErr } = await supabase
       .from("itinerario_salidas")
       .update({ itinerario: nextItinerario, updated_at: now })
-      .eq("id", itineraryId);
+      .eq("id", row.id);
 
     if (upErr) {
       return NextResponse.json({ ok: false, error: upErr.message }, { status: 500 });

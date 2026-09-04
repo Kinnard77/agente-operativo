@@ -17,11 +17,12 @@ export async function processOperatorCheckin(itineraryId: string, stopId: string
 
     const supabase = getAdminSupabase();
 
-    // 2) Leer fila itinerario_salidas
+    // 2) Leer fila itinerario_salidas (soporta UUID o id_salida como SAL-SMA-20261020)
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(itineraryId);
     const { data: row, error } = await supabase
         .from("itinerario_salidas")
         .select("id, itinerario")
-        .eq("id", itineraryId)
+        .eq(isUuid ? "id" : "id_salida", itineraryId)
         .single();
 
     if (error || !row) throw new Error(error?.message ?? "Itinerario no encontrado");
